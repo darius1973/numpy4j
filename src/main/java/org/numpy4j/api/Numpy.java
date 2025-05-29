@@ -1,4 +1,4 @@
-package org.numjava.api;
+package org.numpy4j.api;
 
 import org.numjava.core.NDArray;
 
