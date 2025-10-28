@@ -58,17 +58,21 @@ public class Example {
     }
 }
 
+```
+
 ## Utilities
 
+```java
 NDArray arr = Numpy.arange(0, 5, 2);
 System.out.println(Arrays.toString(arr.getData())); // [0.0, 2.0, 4.0]
 
 NDArray zeros = Numpy.zeros(3, 3);
 NDArray empty = Numpy.empty(2, 2);
-
+```
 
 ## Linear Algebra
 
+```java
 import org.numpy4j.linalg.LinearAlgebra;
 
 NDArray x = Numpy.arange(0, 3);
@@ -76,15 +80,18 @@ NDArray I = LinearAlgebra.eye(3);
 double result = LinearAlgebra.dot(x, x); // 5.0
 
 NDArray product = LinearAlgebra.matmul(Numpy.arange(0, 6).reshape(2, 3), I);
+```
 
 ## Random Numbers
 
+```java
 Numpy.seed(42);
 NDArray rand = Numpy.random(2, 2);
 System.out.println(rand);
-
+```
 ## Testing
 
+```java
 @Test
 public void testArange() {
     NDArray arr = Numpy.arange(0, 5, 2);
@@ -99,10 +106,10 @@ public void testReshape() {
     double[] expected = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
     assertArrayEquals(expected, reshaped.getData(), 1e-10);
 }
-
+```
 
 ## python test generator
-
+```python
 import numpy as np, json
 
 tests = {
@@ -112,6 +119,7 @@ tests = {
 
 with open("numpy_tests.json", "w") as f:
     json.dump(tests, f, indent=2)
+```
 
 ## Performance
 
