@@ -1,6 +1,5 @@
-package org.numjava.core;
+package org.numpy4j.core;
 
-import java.nio.DoubleBuffer;
 import java.util.Arrays;
 import java.util.concurrent.*;
 

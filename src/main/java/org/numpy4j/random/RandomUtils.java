@@ -1,4 +1,4 @@
-package org.numjava.random;
+package org.numpy4j.random;
 
 import java.util.Random;
 
