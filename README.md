@@ -1,4 +1,6 @@
 # 🧮 NumPy4J — NumPy for Java
+This project is inspired by the Python NumPy library and aims to bring similar numerical computing capabilities to Java.
+NumPy is a separate project licensed under the BSD 3-Clause License.
 
 NumPy4J is a Java library that brings the functionality and expressiveness of Python’s NumPy to the JVM.
 It allows Java developers to perform scientific computing, numerical analysis,

@@ -7,7 +7,7 @@ import org.numpy4j.linalg.LinearAlgebra;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class TestLinearAlgebra {
+public class LinearAlgebraTest {
 
     @Test
     public void testDot1D() {

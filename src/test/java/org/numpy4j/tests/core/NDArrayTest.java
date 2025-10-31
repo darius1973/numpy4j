@@ -5,7 +5,7 @@ import org.numpy4j.core.NDArray;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestNDArray {
+public class NDArrayTest {
     @Test
     public void testAdd() {
         NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
