@@ -24,7 +24,7 @@ import java.util.Arrays;
  *   <li>Statistical methods such as {@link #sum()} and {@link #mean()}</li>
  * </ul>
  *
- * <h2>Example Usage</h2>
+ * <p><b>Example:</b></p>
  * <pre>{@code
  * // Create arrays
  * NDArray a = NDArray.ones(2, 3);
@@ -156,7 +156,7 @@ public class NDArray {
      * with the specified dimensions. The total number of elements must remain constant.
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = NDArray.arange(0, 6, 1);  // shape (6,)
      * NDArray b = a.reshape(2, 3);          // shape (2, 3)
@@ -221,7 +221,7 @@ public class NDArray {
      * a 2D array of start and end indices per dimension.
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = new NDArray(new double[]{
      *     1, 2, 3,
@@ -280,7 +280,7 @@ public class NDArray {
      * and {@code other} is of shape (n, p), the result will have shape (m, p).
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
      * NDArray b = new NDArray(new double[]{7, 8, 9, 10, 11, 12}, 3, 2);
