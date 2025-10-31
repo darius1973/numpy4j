@@ -10,6 +10,8 @@ NumPy4J combines Pythonic convenience with Java-grade performance.
 
 ---
 
+## 📘 Full API Documentation: https://darius1973.github.io/numpy4j
+
 ## Features
 
 - **NDArray:** n-dimensional arrays with linear indexing, broadcasting, slicing, arithmetic operations, and reshaping.
