@@ -2,6 +2,54 @@ package org.numpy4j.core;
 
 import java.util.Arrays;
 
+/**
+ * A lightweight, high-performance Java implementation of a multidimensional array,
+ * inspired by Python's <strong>NumPy ndarray</strong>.
+ * <p>
+ * {@code NDArray} provides efficient storage and operations for numerical computing,
+ * including element-wise arithmetic, slicing, reshaping, matrix multiplication,
+ * broadcasting, and statistical methods.
+ * <br>
+ * It is designed as part of the {@code numpy4j} project — a Java library
+ * bringing the expressiveness of NumPy to the JVM ecosystem.
+ * </p>
+ *
+ * <h2>Key Features</h2>
+ * <ul>
+ *   <li>Support for arbitrary-dimensional arrays</li>
+ *   <li>Element-wise arithmetic operations</li>
+ *   <li>Automatic broadcasting (similar to NumPy)</li>
+ *   <li>Reshape, slice, transpose, and power operations</li>
+ *   <li>Matrix multiplication via {@link #dot(NDArray)}</li>
+ *   <li>Statistical methods such as {@link #sum()} and {@link #mean()}</li>
+ * </ul>
+ *
+ * <h2>Example Usage</h2>
+ * <pre>{@code
+ * // Create arrays
+ * NDArray a = NDArray.ones(2, 3);
+ * NDArray b = NDArray.arange(0, 6, 1).reshape(2, 3);
+ *
+ * // Perform operations
+ * NDArray c = a.add(b);
+ * NDArray d = c.power(2);
+ * NDArray e = d.dot(NDArray.eye(3));
+ *
+ * System.out.println("Sum: " + e.sum());
+ * System.out.println("Mean: " + e.mean());
+ * }</pre>
+ *
+ * <p>
+ * The internal data is stored as a flat {@code double[]} for efficiency,
+ * and all operations are implemented in pure Java with optional multithreading.
+ * Future versions may integrate with OpenBLAS or Intel MKL for native performance.
+ * </p>
+ *
+ * @author
+ *   Darius Nica
+ * @version 1.0
+ * @since 2025
+ */
 public class NDArray {
     private final int[] shape;
     private final int size;
@@ -21,11 +69,25 @@ public class NDArray {
         this.data = data.clone();
     }
 
+    /**
+     * Returns the element at the specified indices.
+     *
+     * @param indices the indices for each dimension
+     * @return the element value
+     * @throws IllegalArgumentException if index count or values are invalid
+     */
     public double get(int... indices) {
         int idx = linearIndex(indices);
         return data[idx];
     }
 
+    /**
+     * Sets the element at the specified indices to the given value.
+     *
+     * @param value   the value to set
+     * @param indices the indices for each dimension
+     * @throws IllegalArgumentException if index count or values are invalid
+     */
     public void set(double value, int... indices) {
         int idx = linearIndex(indices);
         data[idx] = value;
@@ -42,6 +104,13 @@ public class NDArray {
         return idx;
     }
 
+    /**
+     * Adds this NDArray to another, applying NumPy-style broadcasting if necessary.
+     *
+     * @param other the other NDArray
+     * @return a new NDArray containing the element-wise sum
+     * @throws IllegalArgumentException if shapes are not broadcast-compatible
+     */
     public NDArray add(NDArray other) {
         int[] resultShape = broadcastShape(this.shape, other.shape);
         NDArray result = new NDArray(resultShape);
@@ -61,14 +130,45 @@ public class NDArray {
             throw new IllegalArgumentException("Shapes do not match");
     }
 
+    /**
+     * Returns the shape (dimensions) of this NDArray.
+     *
+     * @return a copy of the shape array
+     */
     public int[] getShape() {
         return shape.clone();
     }
 
+    /**
+     * Returns the data (dimensions) of this NDArray.
+     *
+     * @return a copy of the data array
+     */
     public double[] getData() {
         return data.clone();
     }
 
+    /**
+     * Returns a new {@link NDArray} with the same data but a different shape.
+     * <p>
+     * This method behaves like <code>numpy.reshape()</code> in Python.
+     * It does not modify the original array but creates a view-like copy
+     * with the specified dimensions. The total number of elements must remain constant.
+     * </p>
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray a = NDArray.arange(0, 6, 1);  // shape (6,)
+     * NDArray b = a.reshape(2, 3);          // shape (2, 3)
+     *
+     * System.out.println(Arrays.toString(a.getShape())); // [6]
+     * System.out.println(Arrays.toString(b.getShape())); // [2, 3]
+     * }</pre>
+     *
+     * @param newShape the target dimensions for the new array (e.g., {@code (2, 3)})
+     * @return a reshaped {@link NDArray} containing the same data
+     * @throws IllegalArgumentException if the total number of elements differs
+     */
     public NDArray reshape(int... newShape) {
         int newSize = Arrays.stream(newShape).reduce(1, (a, b) -> a * b);
         if (newSize != size)
@@ -79,17 +179,32 @@ public class NDArray {
     // -------------------
     // New Methods
     // -------------------
-
+    /**
+     * Computes the sum of all elements in the NDArray.
+     *
+     * @return the sum of all elements
+     */
     public double sum() {
         double s = 0;
         for (double v : data) s += v;
         return s;
     }
 
+    /**
+     * Computes the mean (average) of all elements in the NDArray.
+     *
+     * @return the mean value
+     */
     public double mean() {
         return sum() / size;
     }
 
+    /**
+     * Raises each element to the given power.
+     *
+     * @param exponent the exponent to apply
+     * @return a new NDArray with each element raised to {@code exponent}
+     */
     public NDArray power(int exponent) {
         double[] result = new double[size];
         for (int i = 0; i < size; i++) {
@@ -98,18 +213,36 @@ public class NDArray {
         return new NDArray(result, shape);
     }
 
-    public NDArray transpose() {
-        if (shape.length != 2) throw new UnsupportedOperationException("Only 2D transpose supported");
-        int rows = shape[0], cols = shape[1];
-        double[] result = new double[size];
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                result[c * rows + r] = get(r, c);
-            }
-        }
-        return new NDArray(result, cols, rows);
-    }
-
+    /**
+     * Extracts a subarray (slice) from this {@link NDArray}, similar to
+     * <code>numpy[:, :]</code> slicing in Python.
+     * <p>
+     * Currently supports 2D arrays only. The slice indices are specified as
+     * a 2D array of start and end indices per dimension.
+     * </p>
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray a = new NDArray(new double[]{
+     *     1, 2, 3,
+     *     4, 5, 6,
+     *     7, 8, 9
+     * }, 3, 3);
+     *
+     * // Slice rows 0–2 (exclusive of 2), columns 1–3 (exclusive of 3)
+     * NDArray b = a.slice(new int[][]{{0, 2}, {1, 3}});
+     *
+     * // Result:
+     * // [[2.0, 3.0],
+     * //  [5.0, 6.0]]
+     * }</pre>
+     *
+     * @param indices a 2D array defining start and end indices for each dimension,
+     *                e.g. {@code {{rowStart, rowEnd}, {colStart, colEnd}}}
+     * @return a new {@link NDArray} representing the requested slice
+     * @throws IllegalArgumentException if the indices are invalid
+     * @throws UnsupportedOperationException if the array is not 2D
+     */
     public NDArray slice(int[][] indices) {
         if (indices.length != shape.length)
             throw new IllegalArgumentException("Slice indices must match number of dimensions");
@@ -138,6 +271,33 @@ public class NDArray {
             throw new UnsupportedOperationException("Slice only implemented for 2D arrays");
         }
     }
+
+    /**
+     * Computes the matrix dot product between this array and another.
+     * <p>
+     * This method is equivalent to <code>numpy.dot()</code> for 2D arrays (matrices).
+     * It performs standard matrix multiplication: if {@code this} is of shape (m, n)
+     * and {@code other} is of shape (n, p), the result will have shape (m, p).
+     * </p>
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
+     * NDArray b = new NDArray(new double[]{7, 8, 9, 10, 11, 12}, 3, 2);
+     * NDArray c = a.dot(b);
+     *
+     * // Result:
+     * // [[58.0, 64.0],
+     * //  [139.0, 154.0]]
+     *
+     * System.out.println(Arrays.toString(c.getShape())); // [2, 2]
+     * }</pre>
+     *
+     * @param other another {@link NDArray} to multiply with this one
+     * @return the resulting {@link NDArray} after matrix multiplication
+     * @throws UnsupportedOperationException if either array is not 2D
+     * @throws IllegalArgumentException if the inner dimensions do not match
+     */
 
     public NDArray dot(NDArray other) {
         // Only support 2D matrix multiplication

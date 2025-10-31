@@ -1,20 +1,53 @@
 package org.numpy4j.linalg;
 import org.numpy4j.core.NDArray;
-/*
-  ✅ Methods
-    Method	Description
-    dot(a, b)	Matrix/vector dot product (already present — we'll enhance it)
-    matmul(a, b)	General matrix multiplication
-    transpose(a)	Returns the transposed NDArray
-    norm(a)	Euclidean norm (‖a‖₂)
-    inv(a)	Matrix inverse (using Gaussian elimination for now)
-    det(a)	Determinant (recursive or LU-based)
-*/
 
+/**
+ * A utility class providing core linear algebra operations on {@link NDArray} objects,
+ * including vector and matrix computations such as dot products, matrix multiplication,
+ * transposition, norms, determinants, inverses, and identity matrix creation.
+ * <p>
+ * This class is intended as a lightweight alternative to libraries such as NumPy or BLAS,
+ * supporting small to medium-sized datasets directly in pure Java.
+ * </p>
+ *
+ * <h2>Example Usage:</h2>
+ * <pre>{@code
+ * NDArray a = new NDArray(new double[]{1, 2, 3});
+ * NDArray b = new NDArray(new double[]{4, 5, 6});
+ * double dot = LinearAlgebra.dot(a, b); // 32.0
+ *
+ * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
+ * NDArray B = new NDArray(new double[]{5, 6, 7, 8}, 2, 2);
+ * NDArray C = LinearAlgebra.matmul(A, B);
+ * // C = [[19, 22],
+ * //      [43, 50]]
+ *
+ * NDArray T = LinearAlgebra.transpose(A);
+ * // T = [[1, 3],
+ * //      [2, 4]]
+ * }</pre>
+ */
 public class LinearAlgebra {
 
     /**
-     * Dot product for 1D vectors.
+     * Computes the <b>dot product</b> (inner product) of two 1D vectors.
+     * <p>
+     * This operation sums the elementwise products:
+     * <pre>{@code
+     * dot(a, b) = a₁·b₁ + a₂·b₂ + ... + aₙ·bₙ
+     * }</pre>
+     *
+     * @param a the first 1D vector
+     * @param b the second 1D vector
+     * @return the dot product as a scalar value
+     * @throws IllegalArgumentException if the vectors have different lengths
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray a = new NDArray(new double[]{1, 2, 3});
+     * NDArray b = new NDArray(new double[]{4, 5, 6});
+     * double result = LinearAlgebra.dot(a, b); // 32.0
+     * }</pre>
      */
     public static double dot(NDArray a, NDArray b) {
         double[] ad = a.getData();
@@ -28,7 +61,31 @@ public class LinearAlgebra {
     }
 
     /**
-     * Matrix multiplication: C = A × B
+     * Performs <b>matrix multiplication</b> between two 2D matrices:
+     * <pre>{@code
+     * C = A × B
+     * }</pre>
+     * <p>
+     * The number of columns in A must match the number of rows in B.
+     * The result is an m×p matrix, where:
+     * <ul>
+     *   <li>m = A.rows</li>
+     *   <li>p = B.cols</li>
+     * </ul>
+     *
+     * @param A the left-hand matrix
+     * @param B the right-hand matrix
+     * @return a new {@link NDArray} representing the product matrix C
+     * @throws IllegalArgumentException if either input is not 2D or shapes are incompatible
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
+     * NDArray B = new NDArray(new double[]{5, 6, 7, 8}, 2, 2);
+     * NDArray C = LinearAlgebra.matmul(A, B);
+     * // C = [[19, 22],
+     * //      [43, 50]]
+     * }</pre>
      */
     public static NDArray matmul(NDArray A, NDArray B) {
         int[] shapeA = A.getShape();
@@ -59,7 +116,24 @@ public class LinearAlgebra {
     }
 
     /**
-     * Transpose of a 2D matrix.
+     * Returns the <b>transpose</b> of a 2D matrix.
+     * <p>
+     * The rows and columns are swapped:
+     * <pre>{@code
+     * Aᵀ[i, j] = A[j, i]
+     * }</pre>
+     *
+     * @param A the input 2D matrix
+     * @return a new {@link NDArray} representing the transposed matrix
+     * @throws IllegalArgumentException if the input is not a 2D matrix
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
+     * NDArray T = LinearAlgebra.transpose(A);
+     * // T = [[1, 3],
+     * //      [2, 4]]
+     * }</pre>
      */
     public static NDArray transpose(NDArray A) {
         int[] shape = A.getShape();
@@ -77,7 +151,19 @@ public class LinearAlgebra {
     }
 
     /**
-     * Euclidean (L2) norm of a vector.
+     * Computes the <b>Euclidean (L2) norm</b> of a vector:
+     * <pre>{@code
+     * ||A||₂ = sqrt(a₁² + a₂² + ... + aₙ²)
+     * }</pre>
+     *
+     * @param A a 1D vector
+     * @return the L2 norm (magnitude) of the vector
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray v = new NDArray(new double[]{3, 4});
+     * double n = LinearAlgebra.norm(v); // 5.0
+     * }</pre>
      */
     public static double norm(NDArray A) {
         double[] data = A.getData();
@@ -88,8 +174,19 @@ public class LinearAlgebra {
     }
 
     /**
-     * Determinant of a square matrix (recursive Laplace expansion).
-     * Not efficient for large matrices.
+     * Computes the <b>determinant</b> of a square matrix using recursive Laplace expansion.
+     * <p>
+     * This implementation is simple but not efficient for large matrices (O(n!)).
+     *
+     * @param A a square matrix (n×n)
+     * @return the determinant of the matrix
+     * @throws IllegalArgumentException if the input is not square
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
+     * double det = LinearAlgebra.det(A); // -2.0
+     * }</pre>
      */
     public static double det(NDArray A) {
         int[] shape = A.getShape();
@@ -125,7 +222,23 @@ public class LinearAlgebra {
     }
 
     /**
-     * Matrix inverse using Gaussian elimination.
+     * Computes the <b>inverse</b> of a square matrix using Gaussian elimination.
+     * <p>
+     * This method augments the matrix with the identity and applies row operations
+     * to transform [A | I] → [I | A⁻¹].
+     *
+     * @param A the input square matrix
+     * @return the inverse matrix A⁻¹ as an {@link NDArray}
+     * @throws IllegalArgumentException if the matrix is not square
+     * @throws ArithmeticException if the matrix is singular (non-invertible)
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray A = new NDArray(new double[]{4, 7, 2, 6}, 2, 2);
+     * NDArray inv = LinearAlgebra.inv(A);
+     * // inv ≈ [[0.6, -0.7],
+     * //         [-0.2, 0.4]]
+     * }</pre>
      */
     public static NDArray inv(NDArray A) {
         int n = A.getShape()[0];
@@ -167,11 +280,26 @@ public class LinearAlgebra {
     }
 
     /**
-     * Creates an identity matrix of size n x n.
-     * Equivalent to numpy.eye(n)
+     * Creates an <b>identity matrix</b> of size n×n.
+     * <p>
+     * The identity matrix has ones on the main diagonal and zeros elsewhere:
+     * <pre>{@code
+     * eye(3) =
+     * [[1, 0, 0],
+     *  [0, 1, 0],
+     *  [0, 0, 1]]
+     * }</pre>
      *
-     * @param n the size of the matrix (rows = cols = n)
-     * @return NDArray representing the identity matrix
+     * @param n the number of rows and columns
+     * @return an n×n identity matrix as an {@link NDArray}
+     *
+     * <h3>Example:</h3>
+     * <pre>{@code
+     * NDArray I = LinearAlgebra.eye(3);
+     * // [[1, 0, 0],
+     * //  [0, 1, 0],
+     * //  [0, 0, 1]]
+     * }</pre>
      */
     public static NDArray eye(int n) {
         double[] data = new double[n * n];

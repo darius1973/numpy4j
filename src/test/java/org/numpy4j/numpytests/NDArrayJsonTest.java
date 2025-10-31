@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.numpy4j.core.NDArray;
+import org.numpy4j.linalg.LinearAlgebra;
 
 import java.io.InputStream;
 
@@ -92,7 +93,7 @@ public class NDArrayJsonTest {
                     case "transpose.json":
                         NDArray transA = createNDArray(testCase.get("A"));
                         NDArray expectedTrans = createNDArray(testCase.get("result"));
-                        NDArray resultTrans = transA.transpose(); // implement transpose() in NDArray
+                        NDArray resultTrans = LinearAlgebra.transpose(transA);
                         assertArrayEquals(expectedTrans.getData(), resultTrans.getData(), 1e-9);
                         break;
 
@@ -100,7 +101,7 @@ public class NDArrayJsonTest {
                         NDArray powA = createNDArray(testCase.get("A"));
                         int exponent = testCase.get("exponent").asInt();
                         NDArray expectedPow = createNDArray(testCase.get("result"));
-                        NDArray resultPow = powA.power(exponent); // implement power() in NDArray
+                        NDArray resultPow = powA.power(exponent);
                         assertArrayEquals(expectedPow.getData(), resultPow.getData(), 1e-9);
                         break;
                 }
