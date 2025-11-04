@@ -326,6 +326,39 @@ public class NDArray {
         return new NDArray(result, m, p);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        formatArray(sb, data, shape, 0, 0);
+        return sb.toString();
+    }
+
+    /**
+     * Recursive formatter for multi-dimensional array printing.
+     */
+    private void formatArray(StringBuilder sb, double[] data, int[] shape, int dim, int offset) {
+        int size = shape[dim];
+
+        if (dim == shape.length - 1) {
+            sb.append("[");
+            for (int i = 0; i < size; i++) {
+                sb.append(String.format("%.4f", data[offset + i]));
+                if (i < size - 1) sb.append(", ");
+            }
+            sb.append("]");
+        } else {
+            sb.append("[");
+            int stride = 1;
+            for (int i = dim + 1; i < shape.length; i++) stride *= shape[i];
+            for (int i = 0; i < size; i++) {
+                if (i > 0) sb.append("\n").append(" ".repeat(2 * (dim + 1)));
+                formatArray(sb, data, shape, dim + 1, offset + i * stride);
+            }
+            sb.append("]");
+        }
+    }
+
+
     // Computes the broadcasted shape
     private int[] broadcastShape(int[] a, int[] b) {
         int n = Math.max(a.length, b.length);
@@ -359,4 +392,17 @@ public class NDArray {
         }
     }
 
-} 
+    /** Returns the number of elements in the array (like NumPy's ndarray.size) */
+    public int getSize() {
+        int size = Arrays.stream(shape).reduce(1, (a, b) -> a * b);
+        if (this.size != data.length)
+            throw new IllegalArgumentException("Data length does not match shape");
+        return size;
+    }
+
+    /** Returns the number of dimensions (like NumPy's ndarray.ndim) */
+    public int getNdims() {
+        return shape.length;
+    }
+
+}

@@ -42,6 +42,35 @@ public class Numpy {
     }
 
     /**
+     * Generate an NDArray of random values uniformly distributed in [0, 1).
+     * Equivalent to Python's {@code numpy.random.random(size)} or {@code numpy.random.rand(*shape)}.
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray r = Numpy.random(2, 3);
+     * System.out.println(r);
+     * // [[0.7276, 0.6832, 0.3087]
+     * //  [0.2771, 0.6655, 0.9033]]
+     * }</pre>
+     *
+     * @param shape dimensions of the random array
+     * @return NDArray filled with random doubles in [0, 1)
+     */
+    public static NDArray random(int... shape) {
+        int size = 1;
+        for (int s : shape) {
+            size *= s;
+        }
+
+        double[] data = new double[size];
+        for (int i = 0; i < size; i++) {
+            data[i] = RAND.nextDouble();
+        }
+
+        return new NDArray(data, shape);
+    }
+
+    /**
      * Creates a new {@link NDArray} of the specified shape filled with zeros.
      * <p>
      * This method mimics the behavior of <code>numpy.zeros()</code> in Python.
@@ -95,6 +124,55 @@ public class Numpy {
         }
         return new NDArray(data, shape);
     }
+
+    /**
+     * Element-wise exponential of all elements in the input NDArray.
+     * <p>
+     * Equivalent to Python's {@code numpy.exp(x)}.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray x = Numpy.arange(0, 5);
+     * NDArray y = Numpy.exp(x);
+     * System.out.println(y);
+     * // Output: [1.0000, 2.7183, 7.3891, 20.0855, 54.5981]
+     * }</pre>
+     *
+     * @param a input NDArray
+     * @return a new NDArray with element-wise exponentials
+     */
+    public static NDArray exp(NDArray a) {
+        double[] input = a.getData();
+        double[] result = new double[input.length];
+        for (int i = 0; i < input.length; i++) {
+            result[i] = Math.exp(input[i]);
+        }
+        return new NDArray(result, a.getShape());
+    }
+
+    /**
+     * Compute the mean (average) of all elements in the input NDArray.
+     * <p>
+     * Equivalent to Python's {@code numpy.mean(x)}.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray x = Numpy.arange(1, 6);
+     * double mean = Numpy.mean(x);
+     * System.out.println(mean);
+     * // Output: 3.0
+     * }</pre>
+     *
+     * @param a input NDArray
+     * @return mean value as a scalar double
+     */
+    public static double mean(NDArray a) {
+        return a.mean();
+    }
+
+
 
     /**
      * Creates a one-dimensional {@link NDArray} containing evenly spaced values within a specified interval.
