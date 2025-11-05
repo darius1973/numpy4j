@@ -1,6 +1,7 @@
 package org.numpy4j.core;
 
 import java.util.Arrays;
+import java.util.function.DoubleUnaryOperator;
 
 /**
  * A lightweight, high-performance Java implementation of a multidimensional array,
@@ -128,6 +129,33 @@ public class NDArray {
     private void checkShapeMatch(NDArray other) {
         if (!Arrays.equals(this.shape, other.shape))
             throw new IllegalArgumentException("Shapes do not match");
+    }
+
+    /**
+     * Applies the given unary function to each element of this NDArray.
+     *
+     * <p>This operation is element-wise and returns a new NDArray
+     * with the same shape as the original.</p>
+     *
+     * <pre>{@code
+     * NDArray x = NDArray.of(new double[]{-1, 2, -3, 4});
+     * NDArray y = x.map(v -> Math.max(0, v)); // ReLU
+     * }</pre>
+     *
+     * @param function a {@link DoubleUnaryOperator} representing the function to apply
+     * @return a new {@code NDArray} with the result of applying {@code function} to each element
+     */
+    public NDArray map(DoubleUnaryOperator function) {
+        double[] result = new double[data.length];
+        for (int i = 0; i < data.length; i++) {
+            result[i] = function.applyAsDouble(data[i]);
+        }
+        return new NDArray(result, shape.clone());
+    }
+
+    // Example helper to create an NDArray from a flat array and shape
+    public static NDArray of(double[] values, int... shape) {
+        return new NDArray(values, shape);
     }
 
     /**

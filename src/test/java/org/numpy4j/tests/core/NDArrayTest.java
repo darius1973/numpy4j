@@ -70,4 +70,22 @@ public class NDArrayTest {
         assertEquals(2, a.getNdims());
     }
 
+    @Test
+    void testMapAppliesFunctionElementWise() {
+        NDArray x = NDArray.of(new double[]{-1, 0, 2, -3}, 4);
+        NDArray y = x.map(v -> Math.max(0, v)); // ReLU
+
+        double[] expected = {0, 0, 2, 0};
+        assertArrayEquals(expected, y.getData(), 1e-9, "ReLU should replace negatives with 0");
+    }
+
+    @Test
+    void testMapPreservesShape() {
+        NDArray x = NDArray.of(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
+        NDArray y = x.map(v -> v * 2);
+
+        assertArrayEquals(new int[]{2, 3}, y.getShape());
+        assertArrayEquals(new double[]{2, 4, 6, 8, 10, 12}, y.getData(), 1e-9);
+    }
+
 }
