@@ -10,7 +10,7 @@ import org.numpy4j.core.NDArray;
  * supporting small to medium-sized datasets directly in pure Java.
  * </p>
  *
- * <h2>Example Usage:</h2>
+ * <p><b>Example:</b></p>
  * <pre>{@code
  * NDArray a = new NDArray(new double[]{1, 2, 3});
  * NDArray b = new NDArray(new double[]{4, 5, 6});
@@ -42,7 +42,7 @@ public class LinearAlgebra {
      * @return the dot product as a scalar value
      * @throws IllegalArgumentException if the vectors have different lengths
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = new NDArray(new double[]{1, 2, 3});
      * NDArray b = new NDArray(new double[]{4, 5, 6});
@@ -78,7 +78,7 @@ public class LinearAlgebra {
      * @return a new {@link NDArray} representing the product matrix C
      * @throws IllegalArgumentException if either input is not 2D or shapes are incompatible
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
      * NDArray B = new NDArray(new double[]{5, 6, 7, 8}, 2, 2);
@@ -127,7 +127,7 @@ public class LinearAlgebra {
      * @return a new {@link NDArray} representing the transposed matrix
      * @throws IllegalArgumentException if the input is not a 2D matrix
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
      * NDArray T = LinearAlgebra.transpose(A);
@@ -159,7 +159,7 @@ public class LinearAlgebra {
      * @param A a 1D vector
      * @return the L2 norm (magnitude) of the vector
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray v = new NDArray(new double[]{3, 4});
      * double n = LinearAlgebra.norm(v); // 5.0
@@ -182,7 +182,7 @@ public class LinearAlgebra {
      * @return the determinant of the matrix
      * @throws IllegalArgumentException if the input is not square
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray A = new NDArray(new double[]{1, 2, 3, 4}, 2, 2);
      * double det = LinearAlgebra.det(A); // -2.0
@@ -232,7 +232,7 @@ public class LinearAlgebra {
      * @throws IllegalArgumentException if the matrix is not square
      * @throws ArithmeticException if the matrix is singular (non-invertible)
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray A = new NDArray(new double[]{4, 7, 2, 6}, 2, 2);
      * NDArray inv = LinearAlgebra.inv(A);
@@ -293,7 +293,7 @@ public class LinearAlgebra {
      * @param n the number of rows and columns
      * @return an n×n identity matrix as an {@link NDArray}
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray I = LinearAlgebra.eye(3);
      * // [[1, 0, 0],

@@ -1,6 +1,7 @@
 package org.numpy4j.core;
 
 import java.util.Arrays;
+import java.util.function.DoubleUnaryOperator;
 
 /**
  * A lightweight, high-performance Java implementation of a multidimensional array,
@@ -24,7 +25,7 @@ import java.util.Arrays;
  *   <li>Statistical methods such as {@link #sum()} and {@link #mean()}</li>
  * </ul>
  *
- * <h2>Example Usage</h2>
+ * <p><b>Example:</b></p>
  * <pre>{@code
  * // Create arrays
  * NDArray a = NDArray.ones(2, 3);
@@ -131,6 +132,33 @@ public class NDArray {
     }
 
     /**
+     * Applies the given unary function to each element of this NDArray.
+     *
+     * <p>This operation is element-wise and returns a new NDArray
+     * with the same shape as the original.</p>
+     *
+     * <pre>{@code
+     * NDArray x = NDArray.of(new double[]{-1, 2, -3, 4});
+     * NDArray y = x.map(v -> Math.max(0, v)); // ReLU
+     * }</pre>
+     *
+     * @param function a {@link DoubleUnaryOperator} representing the function to apply
+     * @return a new {@code NDArray} with the result of applying {@code function} to each element
+     */
+    public NDArray map(DoubleUnaryOperator function) {
+        double[] result = new double[data.length];
+        for (int i = 0; i < data.length; i++) {
+            result[i] = function.applyAsDouble(data[i]);
+        }
+        return new NDArray(result, shape.clone());
+    }
+
+    // Example helper to create an NDArray from a flat array and shape
+    public static NDArray of(double[] values, int... shape) {
+        return new NDArray(values, shape);
+    }
+
+    /**
      * Returns the shape (dimensions) of this NDArray.
      *
      * @return a copy of the shape array
@@ -156,7 +184,7 @@ public class NDArray {
      * with the specified dimensions. The total number of elements must remain constant.
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = NDArray.arange(0, 6, 1);  // shape (6,)
      * NDArray b = a.reshape(2, 3);          // shape (2, 3)
@@ -221,7 +249,7 @@ public class NDArray {
      * a 2D array of start and end indices per dimension.
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = new NDArray(new double[]{
      *     1, 2, 3,
@@ -280,7 +308,7 @@ public class NDArray {
      * and {@code other} is of shape (n, p), the result will have shape (m, p).
      * </p>
      *
-     * <h3>Example:</h3>
+     * <p><b>Example:</b></p>
      * <pre>{@code
      * NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
      * NDArray b = new NDArray(new double[]{7, 8, 9, 10, 11, 12}, 3, 2);
@@ -326,6 +354,39 @@ public class NDArray {
         return new NDArray(result, m, p);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        formatArray(sb, data, shape, 0, 0);
+        return sb.toString();
+    }
+
+    /**
+     * Recursive formatter for multi-dimensional array printing.
+     */
+    private void formatArray(StringBuilder sb, double[] data, int[] shape, int dim, int offset) {
+        int size = shape[dim];
+
+        if (dim == shape.length - 1) {
+            sb.append("[");
+            for (int i = 0; i < size; i++) {
+                sb.append(String.format("%.4f", data[offset + i]));
+                if (i < size - 1) sb.append(", ");
+            }
+            sb.append("]");
+        } else {
+            sb.append("[");
+            int stride = 1;
+            for (int i = dim + 1; i < shape.length; i++) stride *= shape[i];
+            for (int i = 0; i < size; i++) {
+                if (i > 0) sb.append("\n").append(" ".repeat(2 * (dim + 1)));
+                formatArray(sb, data, shape, dim + 1, offset + i * stride);
+            }
+            sb.append("]");
+        }
+    }
+
+
     // Computes the broadcasted shape
     private int[] broadcastShape(int[] a, int[] b) {
         int n = Math.max(a.length, b.length);
@@ -359,4 +420,17 @@ public class NDArray {
         }
     }
 
-} 
+    /** Returns the number of elements in the array (like NumPy's ndarray.size) */
+    public int getSize() {
+        int size = Arrays.stream(shape).reduce(1, (a, b) -> a * b);
+        if (this.size != data.length)
+            throw new IllegalArgumentException("Data length does not match shape");
+        return size;
+    }
+
+    /** Returns the number of dimensions (like NumPy's ndarray.ndim) */
+    public int getNdims() {
+        return shape.length;
+    }
+
+}
