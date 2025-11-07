@@ -1,0 +1,54 @@
+@options
+@packages
+-classpath
+'/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar:/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3.jar:/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'17'
+-sourcepath
+'/Users/nicafamily/Documents/workspace/numpy4j/src/main/java:/Users/nicafamily/Documents/workspace/numpy4j/target/generated-sources/annotations'
+-author
+-bottom
+'Copyright &#169; 2025. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'NumPy4J 1.3.0 API'
+-use
+-version
+-windowtitle
+'NumPy4J 1.3.0 API'
+org.numpy4j.core
+org.numpy4j.linalg
+org.numpy4j.api
+org.numpy4j.fft
+org.numpy4j.random
+/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar = 1697156424000
+/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3.jar = 1697150075000
+/Users/nicafamily/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3.jar = 1697151069000
+/Users/nicafamily/Documents/workspace/numpy4j/src/main/java/.DS_Store = 1747851867563
+/Users/nicafamily/Documents/workspace/numpy4j/src/main/java = 1747851867561
+/Users/nicafamily/Documents/workspace/numpy4j/target/generated-sources/annotations = 1762511418287
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/tag-search-index.js = 1762511430055
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/overview-tree.html = 1762511429998
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/module-search-index.js = 1762511430050
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/index.html = 1762511430005
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/package-search-index.js = 1762511430051
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/jquery-ui.overrides.css = 1762511430127
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/index-all.html = 1762511430102
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/allpackages-index.html = 1762511430047
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/member-search-index.js = 1762511430054
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/script.js = 1762511430116
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/stylesheet.css = 1762511430115
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/overview-summary.html = 1762511430104
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/help-doc.html = 1762511430112
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/element-list = 1762511429853
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/allclasses-index.html = 1762511430043
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/type-search-index.js = 1762511430052
+/Users/nicafamily/Documents/workspace/numpy4j/target/apidocs/search.js = 1762511430119
