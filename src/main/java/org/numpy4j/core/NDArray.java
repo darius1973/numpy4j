@@ -1,6 +1,7 @@
 package org.numpy4j.core;
 
 import java.util.Arrays;
+import java.util.Random;
 import java.util.function.DoubleUnaryOperator;
 
 /**
@@ -55,6 +56,7 @@ public class NDArray {
     private final int[] shape;
     private final int size;
     private final double[] data;
+    private static final Random RAND = new Random(42);
 
     public NDArray(int... shape) {
         this.shape = shape.clone();
@@ -352,6 +354,61 @@ public class NDArray {
         }
 
         return new NDArray(result, m, p);
+    }
+
+    /**
+     * Creates an NDArray with the given shape, filled with random values
+     * uniformly distributed between 0 (inclusive) and 1 (exclusive).
+     *
+     * <p>Example:
+     * <pre>
+     * NDArray arr = NDArrayUtils.random(2, 3);
+     * // arr.shape() -> [2, 3]
+     * // arr.data() contains 6 random double values
+     * </pre>
+     *
+     * @param shape the shape of the NDArray, e.g., (2,3) for a 2x3 array
+     * @return an NDArray of the specified shape with random values between 0 and 1
+     * @throws IllegalArgumentException if any dimension is non-positive
+     */
+    public static NDArray random(int... shape) {
+        if (shape.length == 0) throw new IllegalArgumentException("Shape must have at least one dimension");
+        int size = 1;
+        for (int s : shape) {
+            if (s <= 0) throw new IllegalArgumentException("Shape dimensions must be positive");
+            size *= s;
+        }
+        double[] data = new double[size];
+        Random rand = new Random();
+        for (int i = 0; i < size; i++) {
+            data[i] = rand.nextDouble();
+        }
+        return new NDArray(data, shape);
+    }
+
+    /**
+     * Creates an NDArray with the given shape, filled with zeros.
+     *
+     * <p>Example:
+     * <pre>
+     * NDArray arr = NDArrayUtils.zeros(2, 3);
+     * // arr.shape() -> [2, 3]
+     * // arr.data() contains 6 zeros
+     * </pre>
+     *
+     * @param shape the shape of the NDArray, e.g., (2,3) for a 2x3 array
+     * @return an NDArray of the specified shape filled with zeros
+     * @throws IllegalArgumentException if any dimension is non-positive
+     */
+    public static NDArray zeros(int... shape) {
+        if (shape.length == 0) throw new IllegalArgumentException("Shape must have at least one dimension");
+        int size = 1;
+        for (int s : shape) {
+            if (s <= 0) throw new IllegalArgumentException("Shape dimensions must be positive");
+            size *= s;
+        }
+        double[] data = new double[size]; // automatically initialized to 0
+        return new NDArray(data, shape);
     }
 
     @Override
