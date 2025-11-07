@@ -16,11 +16,12 @@ public class NDArrayTest {
     @Test
     public void testReshapeValid() {
         NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
+        System.out.println(a);
         NDArray reshaped = a.reshape(3, 2);
 
         // Shape should now be (3, 2)
         assertArrayEquals(new int[]{3, 2}, reshaped.getShape());
-
+        System.out.println(reshaped);
         // Data order must remain the same (row-major)
         assertArrayEquals(new double[]{1, 2, 3, 4, 5, 6}, reshaped.getData(), 1e-10);
     }
@@ -86,6 +87,52 @@ public class NDArrayTest {
 
         assertArrayEquals(new int[]{2, 3}, y.getShape());
         assertArrayEquals(new double[]{2, 4, 6, 8, 10, 12}, y.getData(), 1e-9);
+    }
+
+    @Test
+    public void testRandomShapeAndValues() {
+        NDArray arr = NDArray.random(2, 3);
+        assertArrayEquals(new int[]{2, 3}, arr.getShape());
+        for (double v : arr.getData()) {
+            assertTrue(v >= 0.0 && v < 1.0, "Value must be in [0,1): " + v);
+        }
+    }
+
+    @Test
+    public void testZerosShapeAndValues() {
+        NDArray arr = NDArray.zeros(2, 3);
+        assertArrayEquals(new int[]{2, 3}, arr.getShape());
+        for (double v : arr.getData()) {
+            assertEquals(0.0, v, 1e-9);
+        }
+    }
+
+    @Test
+    public void testRandomIllegalShape() {
+        assertThrows(IllegalArgumentException.class, () -> NDArray.random());
+        assertThrows(IllegalArgumentException.class, () -> NDArray.random(2, -3));
+    }
+
+    @Test
+    public void testZerosIllegalShape() {
+        assertThrows(IllegalArgumentException.class, () -> NDArray.zeros());
+        assertThrows(IllegalArgumentException.class, () -> NDArray.zeros(0, 3));
+    }
+
+    @Test
+    public void testRandomDifferentCallsProduceDifferentArrays() {
+        NDArray arr1 = NDArray.random(2, 2);
+        NDArray arr2 = NDArray.random(2, 2);
+        boolean equal = true;
+        double[] data1 = arr1.getData();
+        double[] data2 = arr2.getData();
+        for (int i = 0; i < data1.length; i++) {
+            if (data1[i] != data2[i]) {
+                equal = false;
+                break;
+            }
+        }
+        assertFalse(equal, "Two random arrays should usually not be identical");
     }
 
 }
