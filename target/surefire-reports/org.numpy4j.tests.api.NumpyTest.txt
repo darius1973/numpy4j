@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.numpy4j.tests.api.NumpyTest
--------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.numpy4j.tests.api.NumpyTest
