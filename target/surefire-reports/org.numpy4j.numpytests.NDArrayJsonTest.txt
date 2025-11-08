@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.numpy4j.numpytests.NDArrayJsonTest
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.57 s - in org.numpy4j.numpytests.NDArrayJsonTest

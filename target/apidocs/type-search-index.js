@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"org.numpy4j.fft","l":"FFT"},{"p":"org.numpy4j.linalg","l":"LinearAlgebra"},{"p":"org.numpy4j.core","l":"NDArray"},{"p":"org.numpy4j.api","l":"Numpy"},{"p":"org.numpy4j.random","l":"RandomUtils"}];updateSearchResults();

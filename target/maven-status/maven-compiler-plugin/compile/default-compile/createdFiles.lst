@@ -1,5 +1,0 @@
-org/numpy4j/api/Numpy.class
-org/numpy4j/fft/FFT.class
-org/numpy4j/linalg/LinearAlgebra.class
-org/numpy4j/core/NDArray.class
-org/numpy4j/random/RandomUtils.class
