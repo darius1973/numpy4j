@@ -13,6 +13,16 @@ public class NDArrayTest {
         NDArray c = a.add(b);
         assertArrayEquals(new double[]{7, 7, 7, 7, 7, 7}, c.getData(), 1e-10);
     }
+
+    @Test
+    public void testDot() {
+        NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
+        NDArray b = new NDArray(new double[]{6, 5, 4, 3, 2, 1}, 3, 2);
+        NDArray c = a.dot(b);
+        assertArrayEquals(new double[]{20, 14, 56, 41}, c.getData(), 1e-10);
+    }
+
+
     @Test
     public void testReshapeValid() {
         NDArray a = new NDArray(new double[]{1, 2, 3, 4, 5, 6}, 2, 3);
@@ -109,13 +119,13 @@ public class NDArrayTest {
 
     @Test
     public void testRandomIllegalShape() {
-        assertThrows(IllegalArgumentException.class, () -> NDArray.random());
+        assertThrows(IllegalArgumentException.class, NDArray::random);
         assertThrows(IllegalArgumentException.class, () -> NDArray.random(2, -3));
     }
 
     @Test
     public void testZerosIllegalShape() {
-        assertThrows(IllegalArgumentException.class, () -> NDArray.zeros());
+        assertThrows(IllegalArgumentException.class, NDArray::zeros);
         assertThrows(IllegalArgumentException.class, () -> NDArray.zeros(0, 3));
     }
 
