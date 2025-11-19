@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.darius1973</groupId>
     <artifactId>numpy4j</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
     <name>NumPy4J</name>
     <description>NumPy-like numerical computing library for Java</description>
