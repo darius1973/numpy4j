@@ -68,6 +68,46 @@ public class NDArray {
         this.data = new double[this.size];
     }
 
+
+    /**
+     * Creates a new {@code NDArray} with the same structural metadata
+     * (shape, layout) as this array, backed by the provided data buffer.
+     * <p>
+     * This method does <strong>not</strong> modify the current array.
+     * The returned array is independent and does not share memory
+     * with this instance.
+     *
+     * <p>Contract</p>
+     * <ul>
+     *   <li>The returned NDArray has the same shape as this array.</li>
+     *   <li>The provided data buffer length must match actual data length.</li>
+     *   <li>No data is copied from this array.</li>
+     *   <li>The returned array does not share its backing buffer with this array.</li>
+     * </ul>
+     *
+     * <p>Typical usage</p>
+     * This method is commonly used by element-wise operations and
+     * transformations that preserve shape:
+     *
+     * <pre>{@code
+     * NDArray y = x.like(resultData);
+     * }</pre>
+     *
+     * @param newData the backing data for the new NDArray
+     * @return a new NDArray with identical shape and the given data
+     * @throws IllegalArgumentException if {@code newData.length != size()}
+     */
+    public NDArray like(double[] newData) {
+        if (newData.length != data.length) {
+            throw new IllegalArgumentException(
+                    "Data length " + newData.length + " does not match NDArray size " + data.length
+            );
+        }
+        return new NDArray(newData, shape);
+    }
+
+
+
     public NDArray(double[] data, int... shape) {
         this.shape = shape.clone();
         //this.strides = computeStrides(shape);
