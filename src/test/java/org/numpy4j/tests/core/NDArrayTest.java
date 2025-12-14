@@ -145,4 +145,42 @@ public class NDArrayTest {
         assertFalse(equal, "Two random arrays should usually not be identical");
     }
 
+    @Test
+    void testLikePreserveShapeAndCopyDataReference() {
+        NDArray original = new NDArray(
+                new double[]{1.0, 2.0, 3.0, 4.0},
+                2, 2
+        );
+
+        double[] newData = new double[]{10.0, 20.0, 30.0, 40.0};
+
+        NDArray copy = original.like(newData);
+
+        // shape must be identical
+        assertArrayEquals(original.getShape(), copy.getShape());
+
+        // data must contain the provided values
+        assertArrayEquals(newData, copy.getData());
+
+        // but must NOT share data with original
+        assertNotSame(original.getData(), copy.getData());
+    }
+
+    @Test
+    void testLikeSizeMismatchError() {
+        NDArray original = new NDArray(
+                new double[]{1.0, 2.0, 3.0, 4.0},
+                2, 2
+        );
+
+        double[] wrongSize = new double[]{1.0, 2.0};
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> original.like(wrongSize)
+        );
+
+        assertTrue(ex.getMessage().toLowerCase().contains("size"));
+    }
+
 }
