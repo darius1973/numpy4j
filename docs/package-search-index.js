@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.numpy4j.api"},{"l":"org.numpy4j.core"},{"l":"org.numpy4j.fft"},{"l":"org.numpy4j.linalg"},{"l":"org.numpy4j.random"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"org.numpy4j.activations"},{"l":"org.numpy4j.api"},{"l":"org.numpy4j.core"},{"l":"org.numpy4j.fft"},{"l":"org.numpy4j.linalg"},{"l":"org.numpy4j.random"}];updateSearchResults();

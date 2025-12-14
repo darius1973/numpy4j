@@ -1,3 +1,4 @@
+org.numpy4j.activations
 org.numpy4j.api
 org.numpy4j.core
 org.numpy4j.fft
