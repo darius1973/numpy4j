@@ -3,6 +3,7 @@ package org.numpy4j.api;
 import org.numpy4j.core.NDArray;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -91,6 +92,209 @@ public class Numpy {
     public static NDArray zeros(int... shape) {
 
         return new NDArray(shape);
+    }
+
+    /**
+     * Creates a new {@link NDArray} of the specified shape filled with ones.
+     * <p>
+     * This method mimics the behavior of <code>numpy.ones()</code> in Python.
+     * It allocates an array of the given shape and initializes all elements to {@code 1.0}.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray z = NDArray.ones(2, 3);
+     * System.out.println(Arrays.toString(z.getData()));
+     * // Output: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+     * }</pre>
+     *
+     * @param shape the dimensions of the array (e.g., {@code (2, 3)} for a 2×3 array)
+     * @return a new {@link NDArray} with all elements initialized to one
+     * @throws IllegalArgumentException if any dimension is non-positive
+     */
+    public static NDArray ones(int... shape) {
+        int size = 1;
+        for (int s : shape) size *= s;
+        double[] data = new double[size];
+        Arrays.fill(data, 1.0);
+        return new NDArray(data, shape);
+    }
+
+
+    /**
+     * Creates a new {@link NDArray} of the specified shape filled with a given constant value.
+     * <p>
+     * This method mimics the behavior of <code>numpy.full()</code> in Python.
+     * It allocates an array of the given shape and fills all elements with {@code fillValue}.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray f = Numpy.full(7.5, 2, 2);
+     * System.out.println(Arrays.toString(f.getData()));
+     * // Output: [7.5, 7.5, 7.5, 7.5]
+     * }</pre>
+     *
+     * @param fillValue the value to fill the array with
+     * @param shape the dimensions of the array
+     * @return a new {@link NDArray} with all elements initialized to {@code fillValue}
+     * @throws IllegalArgumentException if any dimension is non-positive
+     */
+    public static NDArray full(double fillValue, int... shape) {
+        int size = 1;
+        for (int s : shape) {
+            if (s <= 0) throw new IllegalArgumentException("Shape dimensions must be positive");
+            size *= s;
+        }
+        double[] data = new double[size];
+        Arrays.fill(data, fillValue);
+        return new NDArray(data, shape);
+    }
+
+    /**
+     * Generates a one-dimensional {@link NDArray} of evenly spaced numbers over a specified interval.
+     * <p>
+     * This method mimics the behavior of <code>numpy.linspace()</code> in Python.
+     * It generates {@code num} values starting at {@code start} and ending at {@code stop}, inclusive.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray a = Numpy.linspace(0, 1, 5);
+     * System.out.println(Arrays.toString(a.getData()));
+     * // Output: [0.0, 0.25, 0.5, 0.75, 1.0]
+     * }</pre>
+     *
+     * @param start the starting value of the sequence
+     * @param stop the end value of the sequence
+     * @param num the number of evenly spaced samples to generate
+     * @return a new one-dimensional {@link NDArray} containing the generated values
+     * @throws IllegalArgumentException if {@code num} is not positive
+     */
+    public static NDArray linspace(double start, double stop, int num) {
+        if (num <= 0) throw new IllegalArgumentException("num must be > 0");
+        double[] data = new double[num];
+        if (num == 1) {
+            data[0] = start;
+        } else {
+            double step = (stop - start) / (num - 1);
+            for (int i = 0; i < num; i++) {
+                data[i] = start + i * step;
+            }
+        }
+        return new NDArray(data, num);
+    }
+
+    /**
+     * Creates a two-dimensional identity matrix of size {@code n × n}.
+     * <p>
+     * This method mimics the behavior of <code>numpy.eye()</code> in Python.
+     * The diagonal elements are set to {@code 1.0}, and all others are {@code 0.0}.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray id = Numpy.eye(3);
+     * System.out.println(Arrays.toString(id.getData()));
+     * // Output: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+     * }</pre>
+     *
+     * @param n the number of rows and columns
+     * @return a new {@link NDArray} representing the identity matrix
+     * @throws IllegalArgumentException if {@code n} is non-positive
+     */
+    public static NDArray eye(int n) {
+        if (n <= 0) throw new IllegalArgumentException("n must be positive");
+        double[] data = new double[n * n];
+        for (int i = 0; i < n; i++) {
+            data[i * n + i] = 1.0;
+        }
+        return new NDArray(data, n, n);
+    }
+
+    /**
+     * Creates a deep copy of the given {@link NDArray}.
+     * <p>
+     * This method mimics the behavior of <code>numpy.copy()</code> in Python.
+     * The returned array contains the same data but in a separate memory location.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray a = Numpy.ones(2,2);
+     * NDArray b = Numpy.copy(a);
+     * b.getData()[0] = 99;
+     * // a remains unchanged
+     * }</pre>
+     *
+     * @param a the input NDArray to copy
+     * @return a new {@link NDArray} with copied data
+     */
+    public static NDArray copy(NDArray a) {
+        double[] newData = Arrays.copyOf(a.getData(), a.getData().length);
+        return new NDArray(newData, a.getShape());
+    }
+
+    /**
+     * Flattens the input {@link NDArray} to a one-dimensional array.
+     * <p>
+     * This method mimics the behavior of <code>numpy.flatten()</code> in Python.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray a = Numpy.arange(1,7);
+     * NDArray flat = Numpy.flatten(a);
+     * System.out.println(Arrays.toString(flat.getData()));
+     * // Output: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+     * }</pre>
+     *
+     * @param a the input NDArray
+     * @return a new one-dimensional {@link NDArray} containing the same data
+     */
+    public static NDArray flatten(NDArray a) {
+        double[] data = Arrays.copyOf(a.getData(), a.getData().length);
+        return new NDArray(data, data.length);
+    }
+
+    /**
+     * Alias for {@link #flatten(NDArray)}.
+     * <p>
+     * This method mimics the behavior of <code>numpy.ravel()</code> in Python.
+     * </p>
+     */
+    public static NDArray ravel(NDArray a) {
+        return flatten(a);
+    }
+
+    /**
+     * Reshapes the input {@link NDArray} to the specified new shape.
+     * <p>
+     * This method mimics the behavior of <code>numpy.reshape()</code> in Python.
+     * The total number of elements must remain the same.
+     * </p>
+     *
+     * <p><strong>Example usage:</strong></p>
+     * <pre>{@code
+     * NDArray a = Numpy.arange(1,7); // 6 elements
+     * NDArray reshaped = Numpy.reshape(a, 2,3);
+     * System.out.println(Arrays.toString(reshaped.getData()));
+     * // Output: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+     * }</pre>
+     *
+     * @param a the input NDArray
+     * @param newShape the desired shape
+     * @return a new {@link NDArray} reshaped to {@code newShape}
+     * @throws IllegalArgumentException if total size mismatches
+     */
+    public static NDArray reshape(NDArray a, int... newShape) {
+        int newSize = 1;
+        for (int s : newShape) newSize *= s;
+        if (newSize != a.getData().length) {
+            throw new IllegalArgumentException(
+                    "Cannot reshape array of size " + a.getData().length + " into shape " + Arrays.toString(newShape));
+        }
+        return new NDArray(a.getData(), newShape);
     }
 
     /**

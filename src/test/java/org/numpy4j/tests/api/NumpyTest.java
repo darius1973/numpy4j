@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NumpyTest {
 
-    private static final double DELTA = 1e-12;
-
     @Test
     public void testArange() {
         NDArray a = Numpy.arange(0, 5, 1);
@@ -78,5 +76,62 @@ public class NumpyTest {
         for (double v : r.getData()) {
             assertTrue(v >= 0.0 && v < 1.0, "Value out of [0,1): " + v);
         }
+    }
+
+    @Test
+    public void testOnes() {
+        NDArray a = Numpy.ones(2, 3);
+        assertArrayEquals(new double[]{1,1,1,1,1,1}, a.getData());
+        assertArrayEquals(new int[]{2,3}, a.getShape());
+    }
+
+    @Test
+    public void testFull() {
+        NDArray a = Numpy.full(7.5, 2, 2);
+        assertArrayEquals(new double[]{7.5,7.5,7.5,7.5}, a.getData());
+        assertArrayEquals(new int[]{2,2}, a.getShape());
+    }
+
+    @Test
+    public void testLinspace() {
+        NDArray a = Numpy.linspace(0, 1, 5);
+        assertArrayEquals(new double[]{0.0,0.25,0.5,0.75,1.0}, a.getData(), 1e-10);
+        assertArrayEquals(new int[]{5}, a.getShape());
+    }
+
+    @Test
+    public void testEye() {
+        NDArray a = Numpy.eye(3);
+        assertArrayEquals(new double[]{
+                1.0,0.0,0.0,
+                0.0,1.0,0.0,
+                0.0,0.0,1.0
+        }, a.getData());
+        assertArrayEquals(new int[]{3,3}, a.getShape());
+    }
+
+    @Test
+    public void testCopy() {
+        NDArray a = Numpy.ones(2,2);
+        NDArray b = Numpy.copy(a);
+        assertArrayEquals(a.getData(), b.getData());
+        assertArrayEquals(a.getShape(), b.getShape());
+    }
+
+    @Test
+    public void testFlattenRavel() {
+        NDArray a = Numpy.arange(1, 7, 1); // [1,2,3,4,5,6]
+        NDArray flat = Numpy.flatten(a);
+        NDArray ravel = Numpy.ravel(a);
+        assertArrayEquals(new double[]{1,2,3,4,5,6}, flat.getData());
+        assertArrayEquals(new double[]{1,2,3,4,5,6}, ravel.getData());
+    }
+
+    @Test
+    public void testReshape() {
+        NDArray a = Numpy.arange(1,7,1); // 6 elements
+        NDArray reshaped = Numpy.reshape(a, 2,3);
+        assertArrayEquals(new int[]{2,3}, reshaped.getShape());
+        assertArrayEquals(a.getData(), reshaped.getData());
     }
 }

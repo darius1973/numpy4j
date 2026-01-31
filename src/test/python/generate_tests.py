@@ -144,6 +144,87 @@ def generate_power_tests():
     return tests
 
 # ----------------------------
+# 9. Ones
+# ----------------------------
+def generate_ones_tests():
+    ones_array = np.ones((2, 3))
+    return [{
+        "A": {"method": "ones", "shape": list(ones_array.shape)},
+        "result": to_flat_json(ones_array)
+    }]
+
+# ----------------------------
+# 10. Full
+# ----------------------------
+def generate_full_tests():
+    full_array = np.full((3, 2), 7.5)
+    return [{
+        "A": {"method": "full", "shape": list(full_array.shape), "fillValue": 7.5},
+        "result": to_flat_json(full_array)
+    }]
+
+# ----------------------------
+# 11. Line Space
+# ----------------------------
+def generate_linspace_tests():
+    linspace_array = np.linspace(0, 5, 6)
+    return [{
+        "A": {"method": "linspace", "start": 0, "stop": 5, "num": 6},
+        "result": to_flat_json(linspace_array)
+    }]
+
+# ----------------------------
+# 12. Eye
+# ----------------------------
+def generate_eye_tests():
+    eye_array = np.eye(3)
+    return [{
+        "A": {"method": "eye", "n": 3},
+        "result": to_flat_json(eye_array)
+    }]
+
+# ----------------------------
+# 13. Flatten
+# ----------------------------
+def generate_flatten_tests():
+    arr = np.array([[1, 2, 3], [4, 5, 6]])
+    return [{
+        "A": {"method": "flatten", "data": arr.flatten().tolist(), "shape": list(arr.shape)},
+        "result": to_flat_json(arr.flatten())
+    }]
+# ----------------------------
+# 14. Ravel
+# ----------------------------
+def generate_ravel_tests():
+    arr = np.array([[1, 2, 3], [4, 5, 6]])
+    return [{
+        "A": {"method": "ravel", "data": arr.flatten().tolist(), "shape": list(arr.shape)},
+        "result": to_flat_json(arr.ravel())
+    }]
+
+# ----------------------------
+# 15. Reshape
+# ----------------------------
+def generate_reshape_tests2():
+    arr = np.array([[1, 2, 3], [4, 5, 6]])
+    new_shape = (3, 2)
+    return [{
+        "A": {"method": "reshape", "data": arr.flatten().tolist(), "shape": list(arr.shape), "newShape": list(new_shape)},
+        "result": to_flat_json(arr.reshape(new_shape))
+    }]
+
+# ----------------------------
+# 16. Copy
+# ----------------------------
+def generate_copy_tests():
+    arr = np.array([[1, 2], [3, 4]])
+    return [{
+        "A": {"method": "copy", "data": arr.flatten().tolist(), "shape": list(arr.shape)},
+        "result": to_flat_json(arr)
+    }]
+
+
+# ----------------------------
 # Main function
 # ----------------------------
 if __name__ == "__main__":
@@ -155,7 +236,12 @@ if __name__ == "__main__":
         "aggregate.json": generate_aggregate_tests(),
         "slicing.json": generate_slicing_tests(),
         "transpose.json": generate_transpose_tests(),
-        "power.json": generate_power_tests()
+        "power.json": generate_power_tests(),
+        "eye.json":  generate_eye_tests(),
+        "ravel.json": generate_ravel_tests(),
+        "one.json": generate_ones_tests(),
+        "copy.json": generate_copy_tests(),
+        "full.json": generate_full_tests()
     }
 
     for filename, content in all_tests.items():
