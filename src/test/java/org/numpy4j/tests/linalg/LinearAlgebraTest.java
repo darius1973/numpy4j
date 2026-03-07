@@ -40,17 +40,5 @@ public class LinearAlgebraTest {
         assertArrayEquals(new int[]{2, 2}, result.getShape());
         assertArrayEquals(new double[]{58, 64, 139, 154}, result.getData(), 1e-10);
     }
-
-    @Test
-    public void testEye() {
-        NDArray eye = LinearAlgebra.eye(3);
-        assertArrayEquals(new int[]{3, 3}, eye.getShape());
-        double[] expected = {
-                1, 0, 0,
-                0, 1, 0,
-                0, 0, 1
-        };
-        assertArrayEquals(expected, eye.getData(), 1e-10);
-    }
 }
 

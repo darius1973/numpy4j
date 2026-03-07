@@ -37,7 +37,10 @@ public class NDArrayJsonTest {
                 "aggregate.json",
                 "slicing.json",
                 "transpose.json",
-                "power.json"
+                "power.json",
+                "subtract.json",
+                "multiply.json",
+                "divide.json"
         };
 
         for (String file : files) {
@@ -65,7 +68,6 @@ public class NDArrayJsonTest {
                         NDArray resultReshape = reshapeA.reshape(newShape);
                         assertArrayEquals(expectedReshape.getData(), resultReshape.getData(), 1e-9);
                         break;
-
                     case "broadcast.json":
                         NDArray broadcastA = createNDArray(testCase.get("A"));
                         NDArray broadcastB = createNDArray(testCase.get("B"));
@@ -73,7 +75,6 @@ public class NDArrayJsonTest {
                         NDArray resultBroadcast = broadcastA.add(broadcastB); // broadcasting sum
                         assertArrayEquals(expectedBroadcast.getData(), resultBroadcast.getData(), 1e-9);
                         break;
-
                     case "aggregate.json":
                         NDArray aggA = createNDArray(testCase.get("A"));
                         double expectedSum = testCase.get("sum").asDouble();
@@ -81,7 +82,6 @@ public class NDArrayJsonTest {
                         assertEquals(expectedSum, aggA.sum(), 1e-9);     // implement sum() in NDArray
                         assertEquals(expectedMean, aggA.mean(), 1e-9);   // implement mean() in NDArray
                         break;
-
                     case "slicing.json":
                         NDArray sliceA = createNDArray(testCase.get("A"));
                         int[][] sliceIndices = mapper.convertValue(testCase.get("slice_indices"), int[][].class);
@@ -89,20 +89,41 @@ public class NDArrayJsonTest {
                         NDArray resultSlice = sliceA.slice(sliceIndices); // implement slice() in NDArray
                         assertArrayEquals(expectedSlice.getData(), resultSlice.getData(), 1e-9);
                         break;
-
                     case "transpose.json":
                         NDArray transA = createNDArray(testCase.get("A"));
                         NDArray expectedTrans = createNDArray(testCase.get("result"));
                         NDArray resultTrans = LinearAlgebra.transpose(transA);
                         assertArrayEquals(expectedTrans.getData(), resultTrans.getData(), 1e-9);
                         break;
-
                     case "power.json":
                         NDArray powA = createNDArray(testCase.get("A"));
                         int exponent = testCase.get("exponent").asInt();
                         NDArray expectedPow = createNDArray(testCase.get("result"));
                         NDArray resultPow = powA.power(exponent);
                         assertArrayEquals(expectedPow.getData(), resultPow.getData(), 1e-9);
+                        break;
+                    case "subtract.json":
+                        NDArray sbtrA = createNDArray(testCase.get("A"));
+                        NDArray sbtrB = createNDArray(testCase.get("B"));
+                        NDArray expectedSubtractResult = createNDArray(testCase.get("result"));
+                        NDArray resultSubtract = sbtrA.subtract(sbtrB);
+                        assertArrayEquals(expectedSubtractResult.getData(), resultSubtract.getData(), 1e-9);
+                        break;
+                    case "multiply.json":
+                        NDArray multA = createNDArray(testCase.get("A"));
+                        NDArray multB = createNDArray(testCase.get("B"));
+                        NDArray expectedMultiplyResult = createNDArray(testCase.get("result"));
+                        NDArray resultMultiply = multA.multiply(multB);
+                        assertArrayEquals(expectedMultiplyResult.getData(),
+                                resultMultiply.getData(), 1e-9);
+                        break;
+                    case "divide.json":
+                        NDArray divA = createNDArray(testCase.get("A"));
+                        NDArray divB = createNDArray(testCase.get("B"));
+                        NDArray expectedDivideResult = createNDArray(testCase.get("result"));
+                        NDArray resultDivide = divA.divide(divB);
+                        assertArrayEquals(expectedDivideResult.getData(),
+                                resultDivide.getData(), 1e-9);
                         break;
                 }
             }

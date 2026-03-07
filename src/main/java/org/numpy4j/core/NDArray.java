@@ -153,7 +153,49 @@ public class NDArray {
     }
 
     /**
-     * Adds this NDArray to another, applying NumPy-style broadcasting if necessary.
+     * Adds another NDArray to this one element-wise,
+     * applying NumPy-style broadcasting if necessary.
+     *
+     * <p>This operation follows NumPy broadcasting rules. If the shapes
+     * differ but are compatible, the smaller array will be automatically
+     * expanded to match the larger array.</p>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     1, 2,
+     *     3, 4
+     * }, 2, 2);
+     *
+     * NDArray b = NDArray.of(new double[]{
+     *     5, 6,
+     *     7, 8
+     * }, 2, 2);
+     *
+     * NDArray c = a.add(b);
+     *
+     * // Result:
+     * // [[6.0, 8.0],
+     * //  [10.0, 12.0]]
+     *
+     * System.out.println(c);
+     * }</pre>
+     *
+     * <p><b>Broadcasting example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     1, 2, 3,
+     *     4, 5, 6
+     * }, 2, 3);
+     *
+     * NDArray b = NDArray.of(new double[]{10, 20, 30}, 3);
+     *
+     * NDArray c = a.add(b);
+     *
+     * // Result:
+     * // [[11.0, 22.0, 33.0],
+     * //  [14.0, 25.0, 36.0]]
+     * }</pre>
      *
      * @param other the other NDArray
      * @return a new NDArray containing the element-wise sum
@@ -426,7 +468,7 @@ public class NDArray {
      */
     private NDArray javaDot(NDArray other) {
         int m = this.shape[0], n = this.shape[1], p = other.shape[1];
-        double[] a = this.data, b = other.data;
+        double[] a = this.data;
         double[] c = new double[m * p];
 
         final int TILE_M = 64;
@@ -446,7 +488,7 @@ public class NDArray {
                             double av = a[aRow + k];
                             int bRow = k * p;
                             for (int j = nn; j < nLim; j++) {
-                                c[cRow + j] += av * b[bRow + j];
+                                c[cRow + j] += av * other.data[bRow + j];
                             }
                         }
                     }
@@ -635,6 +677,291 @@ public class NDArray {
         int offset = r * n;
         System.arraycopy(data, offset, row, 0, n);
         return row;
+    }
+
+    /**
+     * Subtracts another NDArray from this one element-wise,
+     * applying NumPy-style broadcasting if necessary.
+     *
+     * <p>This operation follows NumPy broadcasting rules. If the shapes
+     * differ but are compatible, the smaller array is broadcast to match
+     * the larger one.</p>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     5, 6,
+     *     7, 8
+     * }, 2, 2);
+     *
+     * NDArray b = NDArray.of(new double[]{
+     *     1, 2,
+     *     3, 4
+     * }, 2, 2);
+     *
+     * NDArray c = a.subtract(b);
+     *
+     * // Result:
+     * // [[4.0, 4.0],
+     * //  [4.0, 4.0]]
+     *
+     * System.out.println(c);
+     * }</pre>
+     *
+     * <p><b>Broadcasting example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     10, 20, 30,
+     *     40, 50, 60
+     * }, 2, 3);
+     *
+     * NDArray b = NDArray.of(new double[]{1, 2, 3}, 3);
+     *
+     * NDArray c = a.subtract(b);
+     *
+     * // Result:
+     * // [[9.0, 18.0, 27.0],
+     * //  [39.0, 48.0, 57.0]]
+     * }</pre>
+     *
+     * @param other the other NDArray
+     * @return a new NDArray containing the element-wise difference
+     * @throws IllegalArgumentException if shapes are not broadcast-compatible
+     */
+    public NDArray subtract(NDArray other) {
+        int[] outShape = broadcastShape(this.shape, other.shape);
+        NDArray out = new NDArray(outShape);
+
+        if (Arrays.equals(this.shape, other.shape)) {
+            final int n = this.size;
+            final int PAR_THRESHOLD = 1 << 14;
+
+            if (n >= PAR_THRESHOLD) {
+                int threads = Math.max(1, POOL.getParallelism());
+                int block = (n + threads - 1) / threads;
+
+                try {
+                    POOL.submit(() -> {
+                        for (int t = 0; t < threads; t++) {
+                            final int s = t * block;
+                            final int e = Math.min(n, s + block);
+                            for (int i = s; i < e; i++) {
+                                out.data[i] = this.data[i] - other.data[i];
+                            }
+                        }
+                    }).get();
+                } catch (Exception e) {
+                    for (int i = 0; i < n; i++)
+                        out.data[i] = this.data[i] - other.data[i];
+                }
+
+            } else {
+                for (int i = 0; i < n; i++)
+                    out.data[i] = this.data[i] - other.data[i];
+            }
+
+            return out;
+        }
+
+        int[] idx = new int[outShape.length];
+        for (int i = 0; i < out.size; i++) {
+            indexFromLinear(i, outShape, idx);
+            int ia = linearIndexWithBroadcast(idx, this.shape);
+            int ib = linearIndexWithBroadcast(idx, other.shape);
+            out.data[i] = this.data[ia] - other.data[ib];
+        }
+
+        return out;
+    }
+
+    /**
+     * Divides this NDArray by another element-wise,
+     * applying NumPy-style broadcasting if necessary.
+     *
+     * <p>This operation follows NumPy broadcasting rules. If the shapes
+     * differ but are compatible, the smaller array will be automatically
+     * expanded to match the larger array.</p>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     10, 20,
+     *     30, 40
+     * }, 2, 2);
+     *
+     * NDArray b = NDArray.of(new double[]{
+     *     2, 4,
+     *     5, 10
+     * }, 2, 2);
+     *
+     * NDArray c = a.divide(b);
+     *
+     * // Result:
+     * // [[5.0, 5.0],
+     * //  [6.0, 4.0]]
+     *
+     * System.out.println(c);
+     * }</pre>
+     *
+     * <p><b>Broadcasting example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     10, 20, 30,
+     *     40, 50, 60
+     * }, 2, 3);
+     *
+     * NDArray b = NDArray.of(new double[]{10, 10, 10}, 3);
+     *
+     * NDArray c = a.divide(b);
+     *
+     * // Result:
+     * // [[1.0, 2.0, 3.0],
+     * //  [4.0, 5.0, 6.0]]
+     * }</pre>
+     *
+     * @param other the other NDArray
+     * @return a new NDArray containing the element-wise division
+     * @throws IllegalArgumentException if shapes are not broadcast-compatible
+     */
+    public NDArray divide(NDArray other) {
+        int[] outShape = broadcastShape(this.shape, other.shape);
+        NDArray out = new NDArray(outShape);
+
+        if (Arrays.equals(this.shape, other.shape)) {
+            final int n = this.size;
+            final int PAR_THRESHOLD = 1 << 14;
+
+            if (n >= PAR_THRESHOLD) {
+                int threads = Math.max(1, POOL.getParallelism());
+                int block = (n + threads - 1) / threads;
+
+                try {
+                    POOL.submit(() -> {
+                        for (int t = 0; t < threads; t++) {
+                            final int s = t * block;
+                            final int e = Math.min(n, s + block);
+                            for (int i = s; i < e; i++) {
+                                out.data[i] = this.data[i] / other.data[i];
+                            }
+                        }
+                    }).get();
+                } catch (Exception e) {
+                    for (int i = 0; i < n; i++)
+                        out.data[i] = this.data[i] / other.data[i];
+                }
+
+            } else {
+                for (int i = 0; i < n; i++)
+                    out.data[i] = this.data[i] / other.data[i];
+            }
+
+            return out;
+        }
+
+        int[] idx = new int[outShape.length];
+        for (int i = 0; i < out.size; i++) {
+            indexFromLinear(i, outShape, idx);
+            int ia = linearIndexWithBroadcast(idx, this.shape);
+            int ib = linearIndexWithBroadcast(idx, other.shape);
+            out.data[i] = this.data[ia] / other.data[ib];
+        }
+
+        return out;
+    }
+
+    /**
+     * Multiplies this NDArray with another element-wise,
+     * applying NumPy-style broadcasting if necessary.
+     *
+     * <p>This operation follows NumPy broadcasting rules. If the shapes
+     * differ but are compatible, the smaller array will be automatically
+     * expanded to match the larger array.</p>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     1, 2,
+     *     3, 4
+     * }, 2, 2);
+     *
+     * NDArray b = NDArray.of(new double[]{
+     *     5, 6,
+     *     7, 8
+     * }, 2, 2);
+     *
+     * NDArray c = a.multiply(b);
+     *
+     * // Result:
+     * // [[5.0, 12.0],
+     * //  [21.0, 32.0]]
+     *
+     * System.out.println(c);
+     * }</pre>
+     *
+     * <p><b>Broadcasting example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     1, 2, 3,
+     *     4, 5, 6
+     * }, 2, 3);
+     *
+     * NDArray b = NDArray.of(new double[]{10, 20, 30}, 3);
+     *
+     * NDArray c = a.multiply(b);
+     *
+     * // Result:
+     * // [[10.0, 40.0, 90.0],
+     * //  [40.0, 100.0, 180.0]]
+     * }</pre>
+     *
+     * @param other the other NDArray
+     * @return a new NDArray containing the element-wise product
+     * @throws IllegalArgumentException if shapes are not broadcast-compatible
+     */
+    public NDArray multiply(NDArray other) {
+        int[] outShape = broadcastShape(this.shape, other.shape);
+        NDArray out = new NDArray(outShape);
+
+        if (Arrays.equals(this.shape, other.shape)) {
+            final int n = this.size;
+            final int PAR_THRESHOLD = 1 << 14;
+
+            if (n >= PAR_THRESHOLD) {
+                int threads = Math.max(1, POOL.getParallelism());
+                int block = (n + threads - 1) / threads;
+
+                try {
+                    POOL.submit(() -> {
+                        for (int t = 0; t < threads; t++) {
+                            final int s = t * block;
+                            final int e = Math.min(n, s + block);
+                            for (int i = s; i < e; i++) {
+                                out.data[i] = this.data[i] * other.data[i];
+                            }
+                        }
+                    }).get();
+                } catch (Exception e) {
+                    for (int i = 0; i < n; i++)
+                        out.data[i] = this.data[i] * other.data[i];
+                }
+
+            } else {
+                for (int i = 0; i < n; i++)
+                    out.data[i] = this.data[i] * other.data[i];
+            }
+
+            return out;
+        }
+
+        int[] idx = new int[outShape.length];
+        for (int i = 0; i < out.size; i++) {
+            indexFromLinear(i, outShape, idx);
+            int ia = linearIndexWithBroadcast(idx, this.shape);
+            int ib = linearIndexWithBroadcast(idx, other.shape);
+            out.data[i] = this.data[ia] * other.data[ib];
+        }
+
+        return out;
     }
 
 }
