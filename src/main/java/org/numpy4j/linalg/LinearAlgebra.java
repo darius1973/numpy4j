@@ -96,8 +96,6 @@ public class LinearAlgebra {
             throw new IllegalArgumentException("Incompatible shapes for matrix multiplication");
 
         int m = shapeA[0], n = shapeA[1], p = shapeB[1];
-        NDArray C = new NDArray(m, p);
-
         double[] aData = A.getData();
         double[] bData = B.getData();
         double[] cData = new double[m * p];
@@ -251,7 +249,7 @@ public class LinearAlgebra {
 
         // Create augmented matrix [A | I]
         for (int i = 0; i < n; i++) {
-            System.arraycopy(data, i * n + 0, aug[i], 0, n);
+            System.arraycopy(data, i * n, aug[i], 0, n);
             aug[i][n + i] = 1;
         }
 
@@ -273,39 +271,10 @@ public class LinearAlgebra {
         // Extract inverse
         double[] invData = new double[n * n];
         for (int i = 0; i < n; i++) {
-            System.arraycopy(aug[i], n + 0, invData, i * n + 0, n);
+            System.arraycopy(aug[i], n , invData, i * n, n);
         }
 
         return new NDArray(invData, n, n);
     }
 
-    /**
-     * Creates an <b>identity matrix</b> of size n×n.
-     * <p>
-     * The identity matrix has ones on the main diagonal and zeros elsewhere:
-     * <pre>{@code
-     * eye(3) =
-     * [[1, 0, 0],
-     *  [0, 1, 0],
-     *  [0, 0, 1]]
-     * }</pre>
-     *
-     * @param n the number of rows and columns
-     * @return an n×n identity matrix as an {@link NDArray}
-     *
-     * <p><b>Example:</b></p>
-     * <pre>{@code
-     * NDArray I = LinearAlgebra.eye(3);
-     * // [[1, 0, 0],
-     * //  [0, 1, 0],
-     * //  [0, 0, 1]]
-     * }</pre>
-     */
-    public static NDArray eye(int n) {
-        double[] data = new double[n * n];
-        for (int i = 0; i < n; i++) {
-            data[i * n + i] = 1.0;  // Set diagonal to 1
-        }
-        return new NDArray(data, n, n);
-    }
 }

@@ -223,6 +223,81 @@ def generate_copy_tests():
         "result": to_flat_json(arr)
     }]
 
+# ----------------------------
+# 17. Element-wise subtract
+# ----------------------------
+def generate_subtract_tests():
+    tests = []
+    for _ in range(5):
+        A = np.random.randn(2, 2)
+        B = np.random.randn(2, 2)
+        result = A - B
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+    return tests
+
+# ----------------------------
+# 18. Element-wise multiply
+# ----------------------------
+def generate_multiply_tests():
+    tests = []
+    for _ in range(5):
+        A = np.random.randn(2, 3)
+        B = np.random.randn(3)
+        result = A * B  # broadcasting
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+    return tests
+
+# ----------------------------
+# 19. Element-wise divide
+# ----------------------------
+def generate_divide_tests():
+    tests = []
+    for _ in range(5):
+        A = np.random.rand(2, 2) * 10 + 1e-3  # avoid division by zero
+        B = np.random.rand(2, 2) * 5 + 1e-3
+        result = A / B
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+    return tests
+
+# ----------------------------
+# 20. Element-wise add
+# ----------------------------
+def generate_add_tests():
+    tests = []
+    for _ in range(5):
+        # Basic same-shape addition
+        A = np.random.randn(2, 2)
+        B = np.random.randn(2, 2)
+        result = A + B
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+
+    for _ in range(5):
+        # Broadcasting example
+        A = np.random.randn(2, 3)
+        B = np.random.randn(3)  # will broadcast along first axis
+        result = A + B
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+    return tests
 
 # ----------------------------
 # Main function
@@ -241,7 +316,11 @@ if __name__ == "__main__":
         "ravel.json": generate_ravel_tests(),
         "one.json": generate_ones_tests(),
         "copy.json": generate_copy_tests(),
-        "full.json": generate_full_tests()
+        "full.json": generate_full_tests(),
+        "divide.json": generate_divide_tests(),
+        "multiply.json": generate_multiply_tests(),
+        "subtract.json": generate_subtract_tests(),
+        "add.json": generate_add_tests()
     }
 
     for filename, content in all_tests.items():
@@ -249,3 +328,4 @@ if __name__ == "__main__":
         with open(path, "w") as f:
             json.dump(content, f, indent=4)
         print(f"✅ Wrote {filename}")
+
