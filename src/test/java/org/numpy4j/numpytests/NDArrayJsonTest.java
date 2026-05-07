@@ -40,7 +40,8 @@ public class NDArrayJsonTest {
                 "power.json",
                 "subtract.json",
                 "multiply.json",
-                "divide.json"
+                "divide.json",
+                "solve.json"
         };
 
         for (String file : files) {
@@ -124,6 +125,14 @@ public class NDArrayJsonTest {
                         NDArray resultDivide = divA.divide(divB);
                         assertArrayEquals(expectedDivideResult.getData(),
                                 resultDivide.getData(), 1e-9);
+                        break;
+                    case "solve.json":
+                        NDArray solveA = createNDArray(testCase.get("A"));
+                        NDArray solveB = createNDArray(testCase.get("b"));
+                        NDArray expectedSolveResult = createNDArray(testCase.get("result"));
+                        NDArray resultSolve = LinearAlgebra.solve(solveA, solveB);
+                        assertArrayEquals(expectedSolveResult.getData(),
+                                resultSolve.getData(), 1e-9);
                         break;
                 }
             }
