@@ -1,0 +1,1 @@
+javadoc -d docs -sourcepath src/main/java -subpackages org.numpy4j
