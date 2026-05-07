@@ -1,6 +1,8 @@
 package org.numpy4j.linalg;
 import org.numpy4j.core.NDArray;
 
+import static org.numpy4j.api.Numpy.copy;
+
 /**
  * A utility class providing core linear algebra operations on {@link NDArray} objects,
  * including vector and matrix computations such as dot products, matrix multiplication,
@@ -275,6 +277,145 @@ public class LinearAlgebra {
         }
 
         return new NDArray(invData, n, n);
+    }
+
+    /**
+     * Solves a system of linear equations A · x = b.
+     * <p>
+     * Uses Gaussian elimination with partial pivoting to transform
+     * the matrix into an upper triangular form, then applies back substitution
+     * to compute the solution vector.
+     * </p>
+     *
+     * <pre>{@code
+     * A · x = b
+     * }</pre>
+     *
+     * @param A the coefficient matrix (must be square n × n)
+     * @param b the right-hand side vector (length n or shape n × 1)
+     * @return a {@link NDArray} representing the solution vector x
+     * @throws IllegalArgumentException if A is not square or dimensions do not match
+     *
+     * <p><b>Notes:</b></p>
+     * <ul>
+     *   <li>Input matrices are not modified</li>
+     *   <li>Uses partial pivoting for numerical stability</li>
+     *   <li>Time complexity: O(n³)</li>
+     * </ul>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray A = new NDArray(new double[]{
+     *     3, 2,
+     *     1, 2
+     * }, 2, 2);
+     *
+     * NDArray b = new NDArray(new double[]{
+     *     5, 5
+     * }, 2);
+     *
+     * NDArray x = LinearAlgebra.solve(A, b);
+     * expected:
+     * x.get(0) = 0
+     * x.get(1) = 2.5
+     * NDArray check = LinearAlgebra.matmul(A, x);
+     * // check ≈ b
+     * }</pre>
+     */
+    public static NDArray solve(NDArray A, NDArray b) {
+
+        int n = A.getShape()[0];
+
+        if (A.getShape()[0] != A.getShape()[1]) {
+            throw new IllegalArgumentException("Matrix A must be square");
+        }
+
+        if (b.getShape()[0] != n) {
+            throw new IllegalArgumentException(
+                    "Vector b size must match matrix dimensions");
+        }
+
+        // Make working copies (avoid mutating inputs)
+        NDArray M = copy(A);
+        NDArray rhs = copy(b);
+
+        // Forward elimination
+        for (int i = 0; i < n; i++) {
+
+            // Partial pivoting
+            int maxRow = i;
+            double maxVal = Math.abs(M.get(i, i));
+
+            for (int k = i + 1; k < n; k++) {
+                double val = Math.abs(M.get(k, i));
+
+                if (val > maxVal) {
+                    maxVal = val;
+                    maxRow = k;
+                }
+            }
+
+            // Swap rows in matrix
+            swapRows(M, i, maxRow);
+
+            // Swap values in rhs vector
+            double tempRhs = rhs.get(i);
+            rhs.set(rhs.get(maxRow), i);
+            rhs.set(tempRhs, maxRow);
+
+            double pivot = M.get(i, i);
+
+            if (Math.abs(pivot) < 1e-12) {
+                throw new IllegalArgumentException(
+                        "Matrix is singular or nearly singular");
+            }
+
+            // Elimination
+            for (int k = i + 1; k < n; k++) {
+
+                double factor = M.get(k, i) / pivot;
+
+                for (int j = i; j < n; j++) {
+                    M.set(
+                            M.get(k, j) - factor * M.get(i, j),
+                            k, j
+                    );
+                }
+
+                rhs.set(
+                        rhs.get(k) - factor * rhs.get(i),
+                        k
+                );
+            }
+        }
+
+        // Back substitution
+        NDArray x = NDArray.zeros(n);
+
+        for (int i = n - 1; i >= 0; i--) {
+
+            double sum = rhs.get(i);
+
+            for (int j = i + 1; j < n; j++) {
+                sum -= M.get(i, j) * x.get(j);
+            }
+
+            x.set(sum / M.get(i, i), i);
+        }
+
+        return x;
+    }
+
+    private static void swapRows(NDArray A, int r1, int r2) {
+        if (r1 == r2) return;
+
+        int cols = A.getShape()[1];
+
+        for (int j = 0; j < cols; j++) {
+            double temp = A.get(r1, j);
+            A.set(A.get(r2, j), r1, j);
+            A.set(temp, r2, j);
+        }
     }
 
 }

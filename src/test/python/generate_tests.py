@@ -300,6 +300,34 @@ def generate_add_tests():
     return tests
 
 # ----------------------------
+# 21. Solve linear systems
+# ----------------------------
+def generate_solve_tests():
+    tests = []
+
+    for _ in range(5):
+
+        # Generate invertible matrix
+        while True:
+            A = np.random.randn(3, 3)
+
+            # Ensure matrix is not singular
+            if abs(np.linalg.det(A)) > 1e-6:
+                break
+
+        b = np.random.randn(3)
+
+        x = np.linalg.solve(A, b)
+
+        tests.append({
+            "A": to_flat_json(A),
+            "b": to_flat_json(b),
+            "result": to_flat_json(x)
+        })
+
+    return tests
+
+# ----------------------------
 # Main function
 # ----------------------------
 if __name__ == "__main__":
@@ -320,7 +348,8 @@ if __name__ == "__main__":
         "divide.json": generate_divide_tests(),
         "multiply.json": generate_multiply_tests(),
         "subtract.json": generate_subtract_tests(),
-        "add.json": generate_add_tests()
+        "add.json": generate_add_tests(),
+        "solve.json": generate_solve_tests()
     }
 
     for filename, content in all_tests.items():
