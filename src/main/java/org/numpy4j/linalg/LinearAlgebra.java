@@ -406,6 +406,97 @@ public class LinearAlgebra {
         return x;
     }
 
+    /**
+     * Computes the <b>rank</b> of a matrix.
+     * <p>
+     * The rank of a matrix is the maximum number of linearly independent
+     * rows (or equivalently, columns). It is computed by transforming the
+     * matrix into row echelon form using Gaussian elimination with partial
+     * pivoting and counting the number of pivots.
+     * </p>
+     *
+     * <p>
+     * This method supports rectangular as well as square matrices.
+     * A numerical tolerance is used when determining whether a pivot is zero,
+     * making the implementation more robust for floating-point arithmetic.
+     * </p>
+     *
+     * @param A the input matrix
+     * @return the rank of the matrix
+     *
+     * @throws IllegalArgumentException if the input is not a 2D matrix
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray A = NDArray.of(new double[]{
+     *     1, 2,
+     *     2, 4
+     * }, 2, 2);
+     *
+     * int rank = LinearAlgebra.rank(A);
+     * // rank = 1
+     * }</pre>
+     */
+    public static int rank(NDArray A) {
+
+        if (A.getNdims() != 2) {
+            throw new IllegalArgumentException("Input must be a 2D matrix.");
+        }
+
+        NDArray M = copy(A);
+
+        int rows = M.getShape()[0];
+        int cols = M.getShape()[1];
+
+        int rank = 0;
+        int row = 0;
+
+        final double EPS = 1e-12;
+
+        for (int col = 0; col < cols && row < rows; col++) {
+
+            // Find pivot row
+            int pivotRow = row;
+            double max = Math.abs(M.get(row, col));
+
+            for (int i = row + 1; i < rows; i++) {
+                double value = Math.abs(M.get(i, col));
+                if (value > max) {
+                    max = value;
+                    pivotRow = i;
+                }
+            }
+
+            // No pivot in this column
+            if (max < EPS) {
+                continue;
+            }
+
+            // Swap rows if needed
+            if (pivotRow != row) {
+                swapRows(M, row, pivotRow);
+            }
+
+            // Eliminate below pivot
+            for (int i = row + 1; i < rows; i++) {
+
+                double factor = M.get(i, col) / M.get(row, col);
+
+                for (int j = col; j < cols; j++) {
+                    M.set(
+                            M.get(i, j) - factor * M.get(row, j),
+                            i, j
+                    );
+                }
+            }
+
+            rank++;
+            row++;
+        }
+
+        return rank;
+    }
+
     private static void swapRows(NDArray A, int r1, int r2) {
         if (r1 == r2) return;
 
