@@ -589,6 +589,77 @@ public class NDArray {
         return new NDArray(data, shape);
     }
 
+    /**
+     * Computes the one-dimensional discrete convolution of this array
+     * with another one-dimensional array.
+     *
+     * <p>The operation follows NumPy's {@code np.convolve} behavior
+     * using the {@code "full"} mode. The second input is effectively
+     * reversed during the convolution operation.</p>
+     *
+     * <p>For two arrays {@code a} and {@code b}, the result is defined as:</p>
+     *
+     * <pre>
+     * c[k] = sum(a[j] * b[k - j])
+     * </pre>
+     *
+     * <p>The resulting array has {@code this.size + other.size - 1}
+     * elements.</p>
+     *
+     * <p><b>Example:</b></p>
+     * <pre>{@code
+     * NDArray a = NDArray.of(new double[]{
+     *     1, 2, 3, 4
+     * }, 4);
+     *
+     * NDArray b = NDArray.of(new double[]{
+     *     1, 1
+     * }, 2);
+     *
+     * NDArray result = a.convolve(b);
+     *
+     * // Result:
+     * // [1.0, 3.0, 5.0, 7.0, 4.0]
+     *
+     * System.out.println(result);
+     * }</pre>
+     *
+     * @param other the one-dimensional array to convolve with
+     * @return a new one-dimensional NDArray containing the full convolution
+     * @throws IllegalArgumentException if either array is not one-dimensional
+     */
+    public NDArray convolve(NDArray other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Other array cannot be null");
+        }
+
+        if (this.getNdims() != 1 || other.getNdims() != 1) {
+            throw new IllegalArgumentException(
+                    "Convolution currently supports only one-dimensional arrays"
+            );
+        }
+
+        int n = this.size;
+        int m = other.size;
+
+        double[] result = new double[n + m - 1];
+
+        for (int k = 0; k < result.length; k++) {
+            double sum = 0.0;
+
+            int jStart = Math.max(0, k - (m - 1));
+            int jEnd = Math.min(k, n - 1);
+
+            for (int j = jStart; j <= jEnd; j++) {
+                sum += this.data[j] * other.data[k - j];
+            }
+
+            result[k] = sum;
+        }
+
+        return new NDArray(result, result.length);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

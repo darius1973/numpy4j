@@ -327,6 +327,25 @@ def generate_solve_tests():
 
     return tests
 
+# ---------------------------
+#Convolve
+#----------------------------
+def generate_convolve_tests():
+    tests = []
+
+    for _ in range(5):
+        A = np.random.randn(5)
+        B = np.random.randn(3)
+
+        result = np.convolve(A, B)
+
+        tests.append({
+            "A": to_flat_json(A),
+            "B": to_flat_json(B),
+            "result": to_flat_json(result)
+        })
+
+    return tests
 # ----------------------------
 # Main function
 # ----------------------------
@@ -349,7 +368,8 @@ if __name__ == "__main__":
         "multiply.json": generate_multiply_tests(),
         "subtract.json": generate_subtract_tests(),
         "add.json": generate_add_tests(),
-        "solve.json": generate_solve_tests()
+        "solve.json": generate_solve_tests(),
+        "convolve.json": generate_convolve_tests()
     }
 
     for filename, content in all_tests.items():

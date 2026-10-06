@@ -41,7 +41,8 @@ public class NDArrayJsonTest {
                 "subtract.json",
                 "multiply.json",
                 "divide.json",
-                "solve.json"
+                "solve.json",
+                "convolve.json"
         };
 
         for (String file : files) {
@@ -133,6 +134,13 @@ public class NDArrayJsonTest {
                         NDArray resultSolve = LinearAlgebra.solve(solveA, solveB);
                         assertArrayEquals(expectedSolveResult.getData(),
                                 resultSolve.getData(), 1e-9);
+                        break;
+                    case "convolve.json":
+                        NDArray convA = createNDArray(testCase.get("A"));
+                        NDArray convB = createNDArray(testCase.get("B"));
+                        NDArray expectedConvolve = createNDArray(testCase.get("result"));
+                        NDArray resultConvolve = convA.convolve(convB);
+                        assertArrayEquals( expectedConvolve.getData(), resultConvolve.getData(), 1e-9 );
                         break;
                 }
             }
