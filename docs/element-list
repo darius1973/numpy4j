@@ -1,7 +1,10 @@
 org.numpy4j.activations
 org.numpy4j.api
+org.numpy4j.backend
 org.numpy4j.core
+org.numpy4j.device
 org.numpy4j.fft
 org.numpy4j.linalg
 org.numpy4j.ml
 org.numpy4j.random
+org.numpy4j.storage
