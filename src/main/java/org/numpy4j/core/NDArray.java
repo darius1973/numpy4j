@@ -1,5 +1,10 @@
 package org.numpy4j.core;
 
+import org.numpy4j.device.Device;
+import org.numpy4j.device.DeviceManager;
+import org.numpy4j.storage.ArrayStorage;
+import org.numpy4j.storage.CpuStorage;
+
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
@@ -56,17 +61,60 @@ import java.util.function.DoubleUnaryOperator;
 public class NDArray {
     private final int[] shape;
     private final int size;
-    private final double[] data;
-
+    private ArrayStorage storage;
     // Concurrency
     private static final ForkJoinPool POOL = ForkJoinPool.commonPool();
 
     public NDArray(int... shape) {
-        if (shape == null || shape.length == 0) throw new IllegalArgumentException("Shape cannot be null or empty");
-        this.shape = shape.clone();
-        this.size = Arrays.stream(shape).reduce(1, (a, b) -> a * b);
-        this.data = new double[this.size];
+        this(validateShape(shape), new CpuStorage(computeSize(shape)));
     }
+
+    public NDArray(double[] data, int... shape) {
+        this(validateShape(shape), createStorage(data, shape));
+    }
+
+    public NDArray(Device device, int... shape) {
+        this.shape = validateShape(shape);
+        this.size = computeSize(this.shape);
+
+        if (device == null) {
+            throw new IllegalArgumentException("Device cannot be null");
+        }
+
+        this.storage = DeviceManager.createStorage(device, this.size);
+    }
+
+    private NDArray(int[] shape, ArrayStorage storage) {
+        this.shape = shape.clone();
+        this.size = computeSize(shape);
+
+        if (storage.size() != size) {
+            throw new IllegalArgumentException(
+                    "Storage size does not match shape"
+            );
+        }
+
+        this.storage = storage;
+    }
+
+    private static ArrayStorage createStorage(
+            double[] data, int[] shape) {
+
+        if (data == null) {
+            throw new IllegalArgumentException("Data cannot be null");
+        }
+        int expectedSize = computeSize(validateShape(shape));
+
+        if (data.length != expectedSize) {
+            throw new IllegalArgumentException(
+                    "Data size does not match shape"
+            );
+        }
+
+        return new CpuStorage(data);
+    }
+
+
 
 
     /**
@@ -98,24 +146,17 @@ public class NDArray {
      * @throws IllegalArgumentException if {@code newData.length != size()}
      */
     public NDArray like(double[] newData) {
-        if (newData.length != data.length) {
-            throw new IllegalArgumentException(
-                    "Data length " + newData.length + " does not match NDArray size " + data.length
-            );
+        if (newData == null) {
+            throw new IllegalArgumentException("Data cannot be null");
         }
-        return new NDArray(newData, shape);
+
+        if (newData.length != this.size) {
+            throw new IllegalArgumentException("Data size mismatch");
+        }
+
+        return new NDArray(newData, this.shape);
     }
 
-
-
-    public NDArray(double[] data, int... shape) {
-        this.shape = shape.clone();
-        //this.strides = computeStrides(shape);
-        this.size = Arrays.stream(shape).reduce(1, (a, b) -> a * b);
-        if (data.length != this.size)
-            throw new IllegalArgumentException("Data size does not match shape");
-        this.data = data.clone();
-    }
 
     /**
      * Returns the element at the specified indices.
@@ -126,7 +167,7 @@ public class NDArray {
      */
     public double get(int... indices) {
         int idx = linearIndex(indices);
-        return data[idx];
+        return storage.get(idx);
     }
 
     /**
@@ -138,7 +179,7 @@ public class NDArray {
      */
     public void set(double value, int... indices) {
         int idx = linearIndex(indices);
-        data[idx] = value;
+        storage.set(idx, value);
     }
 
     private int linearIndex(int... indices) {
@@ -202,39 +243,70 @@ public class NDArray {
      * @throws IllegalArgumentException if shapes are not broadcast-compatible
      */
     public NDArray add(NDArray other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Other array cannot be null");
+        }
+
         int[] outShape = broadcastShape(this.shape, other.shape);
         NDArray out = new NDArray(outShape);
+
         if (Arrays.equals(this.shape, other.shape)) {
-            // parallel when large
             final int n = this.size;
             final int PAR_THRESHOLD = 1 << 14;
+
             if (n >= PAR_THRESHOLD) {
                 int threads = Math.max(1, POOL.getParallelism());
                 int block = (n + threads - 1) / threads;
+
                 try {
-                    POOL.submit(() -> {
-                        for (int t = 0; t < threads; t++) {
-                            final int s = t * block;
-                            final int e = Math.min(n, s + block);
-                            for (int i = s; i < e; i++) out.data[i] = this.data[i] + other.data[i];
-                        }
-                    }).get();
+                    POOL.submit(() ->
+                            java.util.stream.IntStream.range(0, threads).parallel().forEach(t -> {
+                                int start = t * block;
+                                int end = Math.min(n, start + block);
+
+                                for (int i = start; i < end; i++) {
+                                    out.storage.set(
+                                            i,
+                                            this.storage.get(i) + other.storage.get(i)
+                                    );
+                                }
+                            })
+                    ).get();
                 } catch (Exception e) {
-                    for (int i = 0; i < n; i++) out.data[i] = this.data[i] + other.data[i];
+                    for (int i = 0; i < n; i++) {
+                        out.storage.set(
+                                i,
+                                this.storage.get(i) + other.storage.get(i)
+                        );
+                    }
                 }
             } else {
-                for (int i = 0; i < n; i++) out.data[i] = this.data[i] + other.data[i];
+                for (int i = 0; i < n; i++) {
+                    out.storage.set(
+                            i,
+                            this.storage.get(i) + other.storage.get(i)
+                    );
+                }
             }
+
             return out;
         }
-        // general broadcasting (serial)
+
+        // General broadcasting (serial)
         int[] idx = new int[outShape.length];
+
         for (int i = 0; i < out.size; i++) {
             indexFromLinear(i, outShape, idx);
+
             int ia = linearIndexWithBroadcast(idx, this.shape);
             int ib = linearIndexWithBroadcast(idx, other.shape);
-            out.data[i] = this.data[ia] + other.data[ib];
+
+            out.storage.set(
+                    i,
+                    this.storage.get(ia) + other.storage.get(ib)
+            );
         }
+
         return out;
     }
 
@@ -253,11 +325,17 @@ public class NDArray {
      * @return a new {@code NDArray} with the result of applying {@code function} to each element
      */
     public NDArray map(DoubleUnaryOperator function) {
-        double[] result = new double[data.length];
-        for (int i = 0; i < data.length; i++) {
-            result[i] = function.applyAsDouble(data[i]);
+        if (function == null) {
+            throw new IllegalArgumentException("Function cannot be null");
         }
-        return new NDArray(result, shape.clone());
+
+        double[] result = new double[this.size];
+
+        for (int i = 0; i < this.size; i++) {
+            result[i] = function.applyAsDouble(this.storage.get(i));
+        }
+
+        return new NDArray(result, this.shape);
     }
 
     // Example helper to create an NDArray from a flat array and shape
@@ -280,7 +358,7 @@ public class NDArray {
      * @return a copy of the data array
      */
     public double[] getData() {
-        return data.clone();
+        return storage.copyToHost();
     }
 
     /**
@@ -305,10 +383,16 @@ public class NDArray {
      * @throws IllegalArgumentException if the total number of elements differs
      */
     public NDArray reshape(int... newShape) {
-        int newSize = Arrays.stream(newShape).reduce(1, (a, b) -> a * b);
-        if (newSize != size)
-            throw new IllegalArgumentException("Total size must remain unchanged");
-        return new NDArray(data, newShape);
+        int[] validatedShape = validateShape(newShape);
+        int newSize = computeSize(validatedShape);
+
+        if (newSize != this.size) {
+            throw new IllegalArgumentException(
+                    "Total size must remain unchanged"
+            );
+        }
+
+        return new NDArray(this.storage.copyToHost(), validatedShape);
     }
 
     // -------------------
@@ -320,8 +404,12 @@ public class NDArray {
      * @return the sum of all elements
      */
     public double sum() {
-        double s = 0;
-        for (double v : data) s += v;
+        double s = 0.0;
+
+        for (int i = 0; i < this.size; i++) {
+            s += this.storage.get(i);
+        }
+
         return s;
     }
 
@@ -343,7 +431,7 @@ public class NDArray {
     public NDArray power(int exponent) {
         double[] result = new double[size];
         for (int i = 0; i < size; i++) {
-            result[i] = Math.pow(data[i], exponent);
+            result[i] = Math.pow(storage.get(i), exponent);
         }
         return new NDArray(result, shape);
     }
@@ -467,8 +555,12 @@ public class NDArray {
       Each 64×64 block is small enough to stay in L1 or L2 CPU cache, which gives a massive performance boost.
      */
     private NDArray javaDot(NDArray other) {
-        int m = this.shape[0], n = this.shape[1], p = other.shape[1];
-        double[] a = this.data;
+        int m = this.shape[0];
+        int n = this.shape[1];
+        int p = other.shape[1];
+
+        double[] a = this.storage.copyToHost();
+        double[] b = other.storage.copyToHost();
         double[] c = new double[m * p];
 
         final int TILE_M = 64;
@@ -477,31 +569,37 @@ public class NDArray {
 
         for (int mm = 0; mm < m; mm += TILE_M) {
             int mLim = Math.min(mm + TILE_M, m);
+
             for (int kk = 0; kk < n; kk += TILE_K) {
                 int kLim = Math.min(kk + TILE_K, n);
+
                 for (int nn = 0; nn < p; nn += TILE_N) {
                     int nLim = Math.min(nn + TILE_N, p);
+
                     for (int i = mm; i < mLim; i++) {
                         int aRow = i * n;
                         int cRow = i * p;
+
                         for (int k = kk; k < kLim; k++) {
                             double av = a[aRow + k];
                             int bRow = k * p;
+
                             for (int j = nn; j < nLim; j++) {
-                                c[cRow + j] += av * other.data[bRow + j];
+                                c[cRow + j] += av * b[bRow + j];
                             }
                         }
                     }
                 }
             }
         }
+
         return new NDArray(c, m, p);
     }
 
     // Parallel matmul: parallelize over output rows (simple, effective)
     private NDArray javaDotParallel(NDArray other) {
         int m = this.shape[0], n = this.shape[1], p = other.shape[1];
-        double[] a = this.data, b = other.data;
+        double[] a = this.storage.copyToHost(), b = other.storage.copyToHost();
         double[] c = new double[m * p];
 
         final int threads = Math.max(1, POOL.getParallelism());
@@ -651,7 +749,7 @@ public class NDArray {
             int jEnd = Math.min(k, n - 1);
 
             for (int j = jStart; j <= jEnd; j++) {
-                sum += this.data[j] * other.data[k - j];
+                sum += this.storage.get(j) * other.storage.get(k - j);
             }
 
             result[k] = sum;
@@ -663,7 +761,7 @@ public class NDArray {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        formatArray(sb, data, shape, 0, 0);
+        formatArray(sb, this.storage.copyToHost(), shape, 0, 0);
         return sb.toString();
     }
 
@@ -728,10 +826,13 @@ public class NDArray {
 
     /** Returns the number of elements in the array (like NumPy's ndarray.size) */
     public int getSize() {
-        int size = Arrays.stream(shape).reduce(1, (a, b) -> a * b);
-        if (this.size != data.length)
-            throw new IllegalArgumentException("Data length does not match shape");
-        return size;
+        if (this.size != storage.size()) {
+            throw new IllegalStateException(
+                    "Array size does not match storage size"
+            );
+        }
+
+        return this.size;
     }
 
     /** Returns the number of dimensions (like NumPy's ndarray.ndim) */
@@ -741,12 +842,28 @@ public class NDArray {
 
     // Returns a 1D view of row i (shape: [n])
     public double[] getRow(int r) {
-        if (shape.length != 2) throw new UnsupportedOperationException("getRow only valid for 2D arrays");
-        int m = shape[0], n = shape[1];
-        if (r < 0 || r >= m) throw new IndexOutOfBoundsException();
+        if (shape.length != 2) {
+            throw new UnsupportedOperationException(
+                    "getRow only valid for 2D arrays"
+            );
+        }
+
+        int m = shape[0];
+        int n = shape[1];
+
+        if (r < 0 || r >= m) {
+            throw new IndexOutOfBoundsException(
+                    "Row index out of bounds: " + r
+            );
+        }
+
         double[] row = new double[n];
         int offset = r * n;
-        System.arraycopy(data, offset, row, 0, n);
+
+        for (int j = 0; j < n; j++) {
+            row[j] = storage.get(offset + j);
+        }
+
         return row;
     }
 
@@ -817,18 +934,24 @@ public class NDArray {
                             final int s = t * block;
                             final int e = Math.min(n, s + block);
                             for (int i = s; i < e; i++) {
-                                out.data[i] = this.data[i] - other.data[i];
+                                out.storage.set(i,
+                                        this.storage.get(i) - other.storage.get(i)
+                                );
                             }
                         }
                     }).get();
                 } catch (Exception e) {
                     for (int i = 0; i < n; i++)
-                        out.data[i] = this.data[i] - other.data[i];
+                        out.storage.set(i,
+                                this.storage.get(i) - other.storage.get(i)
+                        );
                 }
 
             } else {
                 for (int i = 0; i < n; i++)
-                    out.data[i] = this.data[i] - other.data[i];
+                    out.storage.set(i,
+                            this.storage.get(i) - other.storage.get(i)
+                    );
             }
 
             return out;
@@ -839,7 +962,9 @@ public class NDArray {
             indexFromLinear(i, outShape, idx);
             int ia = linearIndexWithBroadcast(idx, this.shape);
             int ib = linearIndexWithBroadcast(idx, other.shape);
-            out.data[i] = this.data[ia] - other.data[ib];
+            out.storage.set(i,
+                    this.storage.get(ia) - other.storage.get(ib)
+            );
         }
 
         return out;
@@ -912,18 +1037,25 @@ public class NDArray {
                             final int s = t * block;
                             final int e = Math.min(n, s + block);
                             for (int i = s; i < e; i++) {
-                                out.data[i] = this.data[i] / other.data[i];
+                                out.storage.set(i,
+                                        this.storage.get(i)/other.storage.get(i)
+                                );
                             }
                         }
                     }).get();
                 } catch (Exception e) {
                     for (int i = 0; i < n; i++)
-                        out.data[i] = this.data[i] / other.data[i];
+                        out.storage.set(i,
+                                this.storage.get(i) / other.storage.get(i)
+                        );
+
                 }
 
             } else {
                 for (int i = 0; i < n; i++)
-                    out.data[i] = this.data[i] / other.data[i];
+                    out.storage.set(i,
+                            this.storage.get(i) / other.storage.get(i)
+                    );
             }
 
             return out;
@@ -934,7 +1066,9 @@ public class NDArray {
             indexFromLinear(i, outShape, idx);
             int ia = linearIndexWithBroadcast(idx, this.shape);
             int ib = linearIndexWithBroadcast(idx, other.shape);
-            out.data[i] = this.data[ia] / other.data[ib];
+            out.storage.set(i,
+                    this.storage.get(ia) / other.storage.get(ib)
+            );
         }
 
         return out;
@@ -1007,18 +1141,24 @@ public class NDArray {
                             final int s = t * block;
                             final int e = Math.min(n, s + block);
                             for (int i = s; i < e; i++) {
-                                out.data[i] = this.data[i] * other.data[i];
+                                out.storage.set(i,
+                                        this.storage.get(i) * other.storage.get(i)
+                                );
                             }
                         }
                     }).get();
                 } catch (Exception e) {
                     for (int i = 0; i < n; i++)
-                        out.data[i] = this.data[i] * other.data[i];
+                        out.storage.set(i,
+                                this.storage.get(i) * other.storage.get(i)
+                        );
                 }
 
             } else {
                 for (int i = 0; i < n; i++)
-                    out.data[i] = this.data[i] * other.data[i];
+                    out.storage.set(i,
+                            this.storage.get(i) * other.storage.get(i)
+                    );
             }
 
             return out;
@@ -1029,10 +1169,71 @@ public class NDArray {
             indexFromLinear(i, outShape, idx);
             int ia = linearIndexWithBroadcast(idx, this.shape);
             int ib = linearIndexWithBroadcast(idx, other.shape);
-            out.data[i] = this.data[ia] * other.data[ib];
+            out.storage.set(i,
+                    this.storage.get(ia) * other.storage.get(ib)
+            );
         }
 
         return out;
+    }
+
+    private static int[] validateShape(int[] shape) {
+        if (shape == null || shape.length == 0) {
+            throw new IllegalArgumentException(
+                    "Shape cannot be null or empty"
+            );
+        }
+
+        for (int dimension : shape) {
+            if (dimension < 0) {
+                throw new IllegalArgumentException(
+                        "Shape dimensions cannot be negative"
+                );
+            }
+        }
+
+        return shape.clone();
+    }
+
+    private static int computeSize(int... shape) {
+        int result = 1;
+
+        for (int dimension : shape) {
+            result = Math.multiplyExact(result, dimension);
+        }
+
+        return result;
+    }
+
+    private double[] copyDataToHost() {
+        return storage.copyToHost();
+    }
+
+    public NDArray to(Device target) {
+        if (target == null) {
+            throw new IllegalArgumentException(
+                    "Target device cannot be null"
+            );
+        }
+
+        if (!DeviceManager.isAvailable(target)) {
+            throw new UnsupportedOperationException(
+                    "Device is not available: " + target
+            );
+        }
+
+        if (target.equals(getDevice())) {
+            return this;
+        }
+
+        return new NDArray(
+                storage.copyToHost(),
+                shape
+        );
+    }
+
+    public Device getDevice() {
+        return storage.getDevice();
     }
 
 }
